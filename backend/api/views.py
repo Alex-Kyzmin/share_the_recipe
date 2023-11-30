@@ -23,8 +23,7 @@ from users.models import Subscribe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminOrReadOnly, IsAdminAuthorOrReadOnly
-from .serializers import (IngredientSerializer, ProjectUserCreateSerializer,
-                          ProjectUserSerializer, ReadRecipeSerializer, 
+from .serializers import (IngredientSerializer,ProjectUserSerializer, ReadRecipeSerializer, 
                           RecordRecipeSerializer, SubscribeSerializer, SmallRecipeSerializer, 
                           TagSerializer,)
 
