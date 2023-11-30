@@ -6,7 +6,13 @@ from users.models import ProjectUser, Subscribe
 
 @admin.register(ProjectUser)
 class UserAdmin(UserAdmin):
-    list_display = ('email', 'username',)
+    list_display = (
+        'username',
+        'id',
+        'email',
+        'first_name',
+        'last_name',
+    )
     list_filter = ('email', 'username',)
     search_fields = ('username',)
 

@@ -28,6 +28,11 @@ class ProjectUser(AbstractUser):
         max_length=50,
         verbose_name='Твоя фамилия'
     )
+    REQUIRED_FIELDS = [
+        'first_name',
+        'last_name',
+        'email',
+    ]
     
     class Meta:
         ordering = ['id']
