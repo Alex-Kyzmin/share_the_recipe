@@ -29,10 +29,11 @@ services:
 
   frontend:
     image: alexkyzmin/foodgram_frontend:latest
-    restart: always
     container_name: foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
   
   nginx:
     image: nginx:1.19.3
@@ -43,3 +44,5 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
     restart: always
+    depends_on:
+      - frontend
