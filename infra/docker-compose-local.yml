@@ -11,14 +11,16 @@ services:
     image: postgres:13.0-alpine
     volumes:
       - foodgram_pg_data:/var/lib/postgresql/data/
-    env_file: ./.env
+    env_file:
+      - ./.env
     restart: always
   
   backend:
     build: ./backend/
     restart: always
     container_name: foodgram_backend
-    env_file: ./.env
+    env_file:
+      - ./.env
     volumes:
       - foodgram_static:/backend_static
       - foodgram_media:/media/
