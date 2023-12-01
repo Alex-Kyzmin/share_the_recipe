@@ -16,7 +16,7 @@ services:
     restart: always
   
   backend:
-    build: ./backend/
+    image: alexkyzmin/foodgram_backend:latest
     restart: always
     container_name: foodgram_backend
     env_file:
@@ -28,9 +28,8 @@ services:
       - db
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: alexkyzmin/foodgram_frontend:latest
+    restart: always
     container_name: foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
