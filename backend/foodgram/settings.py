@@ -11,7 +11,7 @@ env.read_env
 
 SECRET_KEY = os.getenv('SECRET_KEY', "default_key")
 
-DEBUG = env.bool('DEBUG_VALUE', False)
+DEBUG = True
 
 ALLOWED_HOSTS = [os.getenv('IP_HOST'), os.getenv('DOMAIN_HOST'), '127.0.0.1', 'localhost']
 
