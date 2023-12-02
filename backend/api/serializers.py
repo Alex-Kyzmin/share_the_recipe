@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.db.models import F
+from django.db import transaction, models
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from rest_framework import serializers,status
-from rest_framework.fields import IntegerField, SerializerMethodField
+from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscribe
 
@@ -134,7 +134,7 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-            amount=F("ingredients_amount__amount")
+            amount=models.F("ingredients_amount__amount")
         )
         return ingredients
 
@@ -158,7 +158,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-            amount=F("ingredients_amount__amount")
+            amount=models.F("ingredients_amount__amount")
         )
         return ingredients
     
@@ -205,7 +205,8 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
                 "Минимальное время приготовления 1 минута"
             )
         return value
-
+    
+    @transaction.atomic
     def add_ingredients_and_tags(self, instance, **validate_data):
         """Добавление ингредиентов тегов."""
         ingredients = validate_data['ingredients']
@@ -224,7 +225,8 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             ]
         )
         return instance
-
+    
+    @transaction.atomic
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -232,7 +234,8 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         return self.add_ingredients_and_tags(
             recipe, ingredients=ingredients, tags=tags
         )
-
+    
+    @transaction.atomic
     def update(self, instance, validated_data):
         instance.ingredients.clear()
         instance.tags.clear()
