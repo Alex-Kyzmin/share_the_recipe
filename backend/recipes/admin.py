@@ -11,7 +11,6 @@ class RecipesAdmin(admin.ModelAdmin):
         'name',
         'author',
         'count_favorites',
-        'ingredients',
     )
     list_filter = ('author', 'name', 'tags',)
     readonly_fields = ('count_favorites',)
