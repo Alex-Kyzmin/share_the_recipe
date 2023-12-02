@@ -1,7 +1,3 @@
-from io import StringIO
-
-from datetime import datetime
-
 from django.db.models import Sum
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
@@ -157,7 +153,7 @@ class RecipeViewSet(ModelViewSet):
             recipe__shopping_list__user=request.user
         ).values(
             'ingredient__name',
-            'ingredient__unit'
+            'ingredient__measurement_unit'
         ).annotate(quantity=Sum('quantity'))
 
         shopping_list = (
@@ -165,7 +161,7 @@ class RecipeViewSet(ModelViewSet):
         )
         shopping_list += '\n'.join([
             f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__unit"]})'
+            f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["quantity"]}'
             for ingredient in ingredients
         ])

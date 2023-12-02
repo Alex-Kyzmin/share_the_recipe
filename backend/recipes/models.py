@@ -12,7 +12,7 @@ class Ingredient(models.Model):
         max_length=100,
         verbose_name='Название',
     )
-    unit = models.CharField(
+    measurement_unit = models.CharField(
         max_length=100,
         verbose_name='Единица измерения',
     )
@@ -23,7 +23,7 @@ class Ingredient(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f'{self.name}, {self.unit}'
+        return f'{self.name}, {self.measurement_unit}'
 
 
 class Tag(models.Model):
@@ -86,7 +86,7 @@ class Recipe(models.Model):
         Ingredient,
         through='IngredientInRecipe',
         related_name='recipes',
-        verbose_name='Ингредиенты'
+        verbose_name='Список Ингредиентов'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -128,7 +128,7 @@ class IngredientInRecipe(models.Model):
 
     def __str__(self):
         return (
-            f'{self.ingredient.name} ({self.ingredient.unit}) - {self.quantity} '
+            f'{self.ingredient.name} ({self.ingredient.measurement_unit}) - {self.quantity} '
         )
 
 

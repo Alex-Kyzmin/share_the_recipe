@@ -131,7 +131,7 @@ class ReadRecipeSerializer(ModelSerializer):
         ingredients = recipe.ingredients.values(
             'id',
             'name',
-            'unit',
+            'measurement_unit',
             quantity=F('ingredientinrecipe__quantity')
         )
         return ingredients
