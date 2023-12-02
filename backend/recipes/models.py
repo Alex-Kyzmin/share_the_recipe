@@ -117,7 +117,7 @@ class IngredientInRecipe(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Ингредиент',
     )
-    quantity = models.PositiveSmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество',
         validators=[MinValueValidator(1, message='Не менее 1 единицы')]
     )
@@ -128,7 +128,7 @@ class IngredientInRecipe(models.Model):
 
     def __str__(self):
         return (
-            f'{self.ingredient.name} ({self.ingredient.measurement_unit}) - {self.quantity} '
+            f'{self.ingredient.name} ({self.ingredient.measurement_unit}) - {self.amount} '
         )
 
 

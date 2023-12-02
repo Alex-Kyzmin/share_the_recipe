@@ -102,7 +102,7 @@ class IngredientInRecipeSerializer(ModelSerializer):
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'quantity')
+        fields = ('id', 'amount')
 
 
 class TagSerializer(ModelSerializer):
@@ -132,7 +132,7 @@ class ReadRecipeSerializer(ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-            quantity=F('ingredientinrecipe__quantity')
+            amount=F('ingredientinrecipe__amount')
         )
         return ingredients
 
@@ -175,7 +175,7 @@ class RecordRecipeSerializer(ModelSerializer):
                 raise ValidationError({
                     'ingredients': '"Этот ингридиент уже был"!'
                 })
-            if int(i['quantity']) <= 0:
+            if int(i['amount']) <= 0:
                 raise ValidationError({
                     'amount': 'Вы забыли ввести количество ингридиента!'
                 })
@@ -194,12 +194,12 @@ class RecordRecipeSerializer(ModelSerializer):
         return value
 
     @transaction.atomic
-    def create_ingredients_quantity(self, ingredients, recipe):
+    def create_ingredients_amount(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(
                 ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
-                quantity=ingredient['quantity']
+                amount=ingredient['amount']
             ) for ingredient in ingredients]
         )
 
@@ -209,7 +209,7 @@ class RecordRecipeSerializer(ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        self.create_ingredients_quantity(recipe=recipe, ingredients=ingredients)
+        self.create_ingredients_amount(recipe=recipe, ingredients=ingredients)
         return recipe
 
     @transaction.atomic
@@ -220,7 +220,7 @@ class RecordRecipeSerializer(ModelSerializer):
         instance.tags.clear()
         instance.tags.set(tags)
         instance.ingredients.clear()
-        self.create_ingredients_quantity(recipe=instance, ingredients=ingredients)
+        self.create_ingredients_amount(recipe=instance, ingredients=ingredients)
         instance.save()
         return instance
 

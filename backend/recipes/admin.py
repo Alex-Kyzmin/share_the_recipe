@@ -38,4 +38,4 @@ class FavouriteAdmin(admin.ModelAdmin):
 
 @admin.register(IngredientInRecipe)
 class IngredientInRecipe(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'quantity',)
+    list_display = ('recipe', 'ingredient', 'amount',)
