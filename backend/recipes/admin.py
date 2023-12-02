@@ -6,7 +6,13 @@ from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe, Rec
 
 @admin.register(Recipe)
 class RecipesAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'author', 'count_favorites',)
+    list_display = (
+        'id',
+        'name',
+        'author',
+        'count_favorites',
+        'ingredients',
+    )
     list_filter = ('author', 'name', 'tags',)
     readonly_fields = ('count_favorites',)
     search_fields = ('name', 'author')
