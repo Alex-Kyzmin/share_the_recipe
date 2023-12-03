@@ -19,45 +19,30 @@ from users.models import Subscribe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminOrReadOnly, IsAdminAuthorOrReadOnly
-from .serializers import (IngredientSerializer,ProjectUserSerializer, ReadRecipeSerializer, 
-                          RecordRecipeSerializer, SubscribeSerializer, SmallRecipeSerializer, 
-                          TagSerializer,)
+from .serializers import (IngredientSerializer, ProjectUserCreateSerializer, ProjectUserSerializer,
+                          ReadRecipeSerializer, RecordRecipeSerializer, SubscribeSerializer,
+                          SmallRecipeSerializer, TagSerializer,)
 
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
-    serializer_class = ProjectUserSerializer
     pagination_class = ProjectPagination
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(request.user, id=self.kwargs['id'])
-        
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(author,
-                                             data=request.data,
-                                             context={"request": request},)
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe,
-                                             user=request.user,
-                                             author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return ProjectUserSerializer
+        return ProjectUserCreateSerializer
+    
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated],)
+    def me(self, request):
+        serializer = ProjectUserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, methods=['get'],
+        permission_classes=[IsAuthenticated],)
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)
         serializer = SubscribeSerializer(
@@ -66,6 +51,28 @@ class CustomUserViewSet(UserViewSet):
             context={'request': request},
         )
         return self.get_paginated_response(serializer.data)
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated],)
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        author_id = self.kwargs['id']
+        author = get_object_or_404(User, id=author_id)
+
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(author,
+                                             data=request.data,
+                                             context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            Subscribe.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            subscription = get_object_or_404(Subscribe,
+                                             user=user,
+                                             author=author)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -102,7 +109,7 @@ class RecipeViewSet(ModelViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    def favorites(self, request, pk):
+    def favorite(self, request, pk):
         if request.method == 'POST':
             return self.add_to(FavouriteRecipe, request.user, pk)
         else:

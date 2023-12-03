@@ -219,6 +219,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             )
         return value
     
+    @transaction.atomic
     def create_ingredients_amt(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(
@@ -228,6 +229,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             ) for ingredient in ingredients]
         )
     
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -236,6 +238,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         self.create_ingredients_amt(recipe=recipe, ingredients=ingredients)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')

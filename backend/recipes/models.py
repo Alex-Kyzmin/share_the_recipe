@@ -29,7 +29,7 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     """ Модель Тэг к рецепту """
     name = models.CharField(
-        max_length=50,
+        max_length=200,
         unique=True,
         verbose_name='Название',
     )
@@ -45,7 +45,7 @@ class Tag(models.Model):
         ],
     )
     slug = models.SlugField(
-        max_length=50,
+        max_length=200,
         unique=True,
         verbose_name='Уникальный слаг',
     )
@@ -61,7 +61,7 @@ class Tag(models.Model):
 class Recipe(models.Model):
     """ Модель Рецепт """
     name = models.CharField(
-        max_length=254,
+        max_length=200,
         verbose_name='Название блюда',
     )
     author = models.ForeignKey(

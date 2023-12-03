@@ -1,11 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import UniqueConstraint
 
 
 class ProjectUser(AbstractUser):
     username = models.CharField(
-        max_length=50,
+        max_length=150,
         unique=True,
         verbose_name="Твой никнэйм",
         error_messages={
@@ -13,7 +12,7 @@ class ProjectUser(AbstractUser):
         },
     )
     email = models.EmailField(
-        max_length=100,
+        max_length=254,
         unique=True,
         verbose_name='Творя электронная почта',
         error_messages={
@@ -21,11 +20,11 @@ class ProjectUser(AbstractUser):
         },
     )
     first_name = models.CharField(
-        max_length=50,
+        max_length=150,
         verbose_name='Твое имя'
     )
     last_name = models.CharField(
-        max_length=50,
+        max_length=150,
         verbose_name='Твоя фамилия'
     )
     REQUIRED_FIELDS = [
@@ -39,7 +38,7 @@ class ProjectUser(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         constraints = [
-            UniqueConstraint(
+            models.UniqueConstraint(
                 fields=["username", "email"], name="unique_username_email"
             )
         ]
@@ -63,9 +62,9 @@ class Subscribe(models.Model):
     )
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['id']
         constraints = [
-            UniqueConstraint(
+            models.UniqueConstraint(
                 fields=['user', 'author'], name='unique_subscription'
             )
         ]
