@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from rest_framework import serializers,status
-from rest_framework.fields import SerializerMethodField
+from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscribe
 
@@ -94,6 +94,14 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class IngredientInRecipeSerializer(serializers.ModelSerializer):
+    id = IntegerField(write_only=True)
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'amount')
+
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -121,8 +129,8 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
     author = ProjectUserSerializer(read_only=True,)
     ingredients = SerializerMethodField(read_only=True,)
     image = Base64ImageField()
-    is_favorited = serializers.BooleanField(default=False)
-    is_in_shopping_cart = serializers.BooleanField(default=False)
+    is_favorited = SerializerMethodField(read_only=True)
+    is_in_shopping_cart = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -137,6 +145,20 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
             amount=models.F("ingredients_amount__amount")
         )
         return ingredients
+    
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        if (user.is_authenticated
+            and obj.favorites.filter(user=user).exists()):
+            return True
+        return False
+
+    def get_is_in_ingredients_list(self, obj):
+        user = self.context['request'].user
+        if (user.is_authenticated
+            and obj.ingredients_list_recipes.filter(user=user).exists()):
+            return True
+        return False
 
 
 class RecordRecipeSerializer(serializers.ModelSerializer):
@@ -145,22 +167,13 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         many=True,
     )
     author = ProjectUserCreateSerializer(read_only=True)
-    ingredients = SerializerMethodField()
+    ingredients = IngredientInRecipeSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
 
-    def get_ingredients(self, obj):
-        recipe = obj
-        ingredients = recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F("ingredients_amount__amount")
-        )
-        return ingredients
     
     def validate_ingredients(self, value):
         ingredients = value
@@ -231,9 +244,12 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = super().create(validated_data)
-        return self.add_ingredients_and_tags(
-            recipe, ingredients=ingredients, tags=tags
+        self.add_ingredients_and_tags(
+            recipe,
+            ingredients=ingredients,
+            tags=tags,
         )
+        return recipe
     
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -242,9 +258,12 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance = self.add_ingredients_and_tags(
-            instance, ingredients=ingredients, tags=tags
+            recipe=instance,
+            ingredients=ingredients,
+            tags=tags,
         )
-        return super().update(instance, validated_data)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         context = {'request': self.context['request']}
