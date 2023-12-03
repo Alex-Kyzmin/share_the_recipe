@@ -156,7 +156,7 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_list(self, obj):
         user = self.context['request'].user
         if (user.is_authenticated
-            and obj.ingredients_amount.filter(user=user).exists()):
+            and obj.ingredients_amount.filter(author=user).exists()):
             return True
         return False
 
