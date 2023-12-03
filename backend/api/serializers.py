@@ -149,14 +149,14 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         if (user.is_authenticated
-            and obj.favorites.filter(user=user).exists()):
+            and user.favorites.filter(recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_list(self, obj):
         user = self.context['request'].user
         if (user.is_authenticated
-            and obj.ingredients_amount.filter(author=user).exists()):
+            and user.shopping_list.filter(recipe=obj).exists()):
             return True
         return False
 
@@ -219,49 +219,31 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             )
         return value
     
-    @transaction.atomic
-    def add_ingredients_and_tags(self, instance, **validate_data):
-        """Добавление ингредиентов тегов."""
-        ingredients = validate_data['ingredients']
-        tags = validate_data['tags']
-        for tag in tags:
-            instance.tags.add(tag)
-
+    def create_ingredients_amt(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
-            [
-                IngredientInRecipe(
-                    recipe=instance,
-                    ingredient_id=ingredient.get('id'),
-                    amount=ingredient.get('amount'),
-                )
-                for ingredient in ingredients
-            ]
+            [IngredientInRecipe(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                recipe=recipe,
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
         )
-        return instance
     
-    @transaction.atomic
     def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = super().create(validated_data)
-        self.add_ingredients_and_tags(
-            recipe,
-            ingredients=ingredients,
-            tags=tags,
-        )
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients_amt(recipe=recipe, ingredients=ingredients)
         return recipe
-    
-    @transaction.atomic
+
     def update(self, instance, validated_data):
-        instance.ingredients.clear()
-        instance.tags.clear()
-        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        instance = self.add_ingredients_and_tags(
-            recipe=instance,
-            ingredients=ingredients,
-            tags=tags,
-        )
+        ingredients = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self.create_ingredients_amounts(recipe=instance, ingredients=ingredients)
         instance.save()
         return instance
 
