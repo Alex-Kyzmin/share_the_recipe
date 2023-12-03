@@ -130,7 +130,7 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
     ingredients = SerializerMethodField(read_only=True,)
     image = Base64ImageField()
     is_favorited = SerializerMethodField(read_only=True)
-    is_in_shopping_list = SerializerMethodField(read_only=True)
+    is_in_shopping_cart = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -153,10 +153,10 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
             return True
         return False
 
-    def get_is_in_shopping_list(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
         if (user.is_authenticated
-            and user.shopping_list.filter(recipe=obj).exists()):
+            and user.shopping_cart.filter(recipe=obj).exists()):
             return True
         return False
 

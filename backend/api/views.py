@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingList, Tag)
+                            ShoppingCart, Tag)
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -102,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    def favorite(self, request, pk):
+    def favorites(self, request, pk):
         if request.method == 'POST':
             return self.add_to(FavouriteRecipe, request.user, pk)
         else:
@@ -113,11 +113,11 @@ class RecipeViewSet(ModelViewSet):
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
-    def shopping_list(self, request, pk):
+    def shopping_cart(self, request, pk):
         if request.method == 'POST':
-            return self.add_to(ShoppingList, request.user, pk)
+            return self.add_to(ShoppingCart, request.user, pk)
         else:
-            return self.delete_from(ShoppingList, request.user, pk)
+            return self.delete_from(ShoppingCart, request.user, pk)
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():
@@ -144,29 +144,29 @@ class RecipeViewSet(ModelViewSet):
         detail=False,
         permission_classes=[IsAuthenticated]
     )
-    def download_shopping_list(self, request):
+    def download_shopping_cart(self, request):
         user = request.user
-        if not user.shopping_list.exists():
+        if not user.shopping_cart.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
 
         ingredients = IngredientInRecipe.objects.filter(
-            recipe__shopping_list__user=request.user
+            recipe__shopping_cart__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
 
-        shopping_list = (
+        shopping_cart = (
             f'Список покупок для: {user.get_full_name()}\n\n'
         )
-        shopping_list += '\n'.join([
+        shopping_cart += '\n'.join([
             f'- {ingredient["ingredient__name"]} '
             f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["amount"]}'
             for ingredient in ingredients
         ])
 
-        filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
+        filename = f'{user.username}_shopping_cart.txt'
+        response = HttpResponse(shopping_cart, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
