@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as DjoserUserViewSet
+from djoser.views import UserViewSet
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import status
@@ -23,30 +23,14 @@ from .serializers import (IngredientSerializer, ProjectUserCreateSerializer, Pro
 User = get_user_model()
 
 
-class CustomUserViewSet(ModelViewSet):
+class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = ProjectPagination
-    http_method_names = ['get', 'post', 'delete']
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return ProjectUserSerializer
         return ProjectUserCreateSerializer
-    
-    @action(detail=False, methods=['POST'], 
-            permission_classes=[IsAuthenticated])
-    def set_password(self, request):
-        view = DjoserUserViewSet.as_view({"post": "set_password"})
-        return view(request._request)
-    
-    action(detail=False, methods=['GET'],
-           permission_classes=[IsAuthenticated],)
-    def me(self, request):
-        serializer = ProjectUserSerializer(
-            request.user,
-            context={"request": request}
-        )
-        return Response(serializer.data)
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
