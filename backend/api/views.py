@@ -102,8 +102,8 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated],
             serializer_class=SmallRecipeSerializer,)
-    def favorite(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['id'])
+    def favorite(self, request, id):
+        recipe = get_object_or_404(Recipe, id=id)
         if request.method == 'POST':
             serializer = SmallRecipeSerializer(
                 recipe,
@@ -128,8 +128,8 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated],
             serializer_class=SmallRecipeSerializer,)
-    def shopping_cart(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['id'])
+    def shopping_cart(self, request, id):
+        recipe = get_object_or_404(Recipe, id=id)
         if request.method == 'POST':
             serializer = SmallRecipeSerializer(
                 recipe,
