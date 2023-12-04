@@ -1,6 +1,4 @@
 from django.db.models import Sum
-from django.contrib.auth import get_user_model
-from django.db.models import Sum
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -12,7 +10,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import Subscribe
 
@@ -55,21 +52,19 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'],
             permission_classes=[IsAuthenticated],)
     def subscribe(self, request, **kwargs):
-        user = request.user
-        author_id = self.kwargs['id']
-        author = get_object_or_404(User, id=author_id)
+        author = get_object_or_404(User, id=self.kwargs['id'])
 
         if request.method == 'POST':
             serializer = SubscribeSerializer(author,
                                              data=request.data,
                                              context={"request": request})
             serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=user, author=author)
+            Subscribe.objects.create(user=request.user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             subscription = get_object_or_404(Subscribe,
-                                             user=user,
+                                             user=request.user,
                                              author=author)
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -104,57 +99,64 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def favorite(self, request, pk):
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated],
+            serializer_class=SmallRecipeSerializer,)
+    def favorite(self, request, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['id'])
         if request.method == 'POST':
-            return self.add_to(FavouriteRecipe, request.user, pk)
-        else:
-            return self.delete_from(FavouriteRecipe, request.user, pk)
+            serializer = SmallRecipeSerializer(
+                recipe,
+                data=request.data,
+                context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            if FavouriteRecipe.objects.filter(user=request.user,
+                                              recipe=recipe).exists():
+                return Response({'errors': 'Рецепт уже добавлен!'},
+                                status=status.HTTP_400_BAD_REQUEST,)
+            FavouriteRecipe.objects.create(user=request.user, recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            get_object_or_404(
+                 FavouriteRecipe,
+                 recipe=recipe,
+                user=request.user,
+            ).delete()
+            return Response({'detail': 'Рецепт удален из избранного!'},
+                            status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def shopping_cart(self, request, pk):
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated],
+            serializer_class=SmallRecipeSerializer,)
+    def shopping_cart(self, request, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['id'])
         if request.method == 'POST':
-            return self.add_to(ShoppingCart, request.user, pk)
-        else:
-            return self.delete_from(ShoppingCart, request.user, pk)
+            serializer = SmallRecipeSerializer(
+                recipe,
+                data=request.data,
+                context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            if ShoppingCart.objects.filter(user=request.user,
+                                              recipe=recipe).exists():
+                return Response({'errors': 'Рецепт уже в списках покупок!'},
+                                status=status.HTTP_400_BAD_REQUEST,)
+            ShoppingCart.objects.create(user=request.user, recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            get_object_or_404(
+                 ShoppingCart,
+                 recipe=recipe,
+                user=request.user,
+            ).delete()
+            return Response({'detail': 'Рецепт удален из списка покупок!'},
+                            status=status.HTTP_204_NO_CONTENT)
+        
 
-    def add_to(self, model, user, pk):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response(
-                {'errors': 'Рецепт уже добавлен!'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
-        serializer = SmallRecipeSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete_from(self, model, user, pk):
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Рецепт удален!'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, permission_classes=[IsAuthenticated],)
     def download_shopping_cart(self, request):
         user = request.user
         if not user.shopping_cart.exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
