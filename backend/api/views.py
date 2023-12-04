@@ -26,11 +26,7 @@ User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = ProjectPagination
-
-    def get_serializer_class(self):
-        if self.request.method in SAFE_METHODS:
-            return ProjectUserSerializer
-        return ProjectUserCreateSerializer
+    serializer_class = ProjectUserCreateSerializer
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
@@ -47,10 +43,13 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=[IsAuthenticated],)
     def subscribe(self, request, **kwargs):
         author = self.get_object()
-        context = {'request': self.request, 'author': author}
 
         if request.method == 'POST':
-            serializer = SubscribeSerializer(data=request.data, context=context)
+            serializer = SubscribeSerializer(
+                author,
+                data=request.data,
+                context={"request": request},
+            )
             serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=request.user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
