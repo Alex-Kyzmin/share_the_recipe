@@ -14,7 +14,7 @@ class ProjectUser(AbstractUser):
     email = models.EmailField(
         max_length=254,
         unique=True,
-        verbose_name='Творя электронная почта',
+        verbose_name='Твоя электронная почта',
         error_messages={
             "unique": "Пользователь с таким email уже зарегистрирован"
         },
