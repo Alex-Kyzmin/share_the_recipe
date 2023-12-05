@@ -31,7 +31,6 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=[IsAuthenticated],)
     def subscribe(self, request, **kwargs):
-        user = request.user
         author = get_object_or_404(User, id=self.kwargs['id'])
 
         if request.method == 'POST':
@@ -40,20 +39,30 @@ class CustomUserViewSet(UserViewSet):
                 data=request.data,
                 context={"request": request},
             )
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save(user=request.user, author=author)
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe, user=user,
-                                             author=author)
-            subscription.delete()
+            if not Subscribe.objects.filter(user=request.user,
+                                            author=author).exists():
+                return Response(
+                {'error': 'Вы не подписаны на данного пользователя'},
+                status=status.HTTP_400_BAD_REQUEST,
+                )
+            get_object_or_404(
+                Subscribe,
+                user=request.user,
+                author=author
+            ).delete()
+            
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
     def subscriptions(self, request):
-        queryset = User.objects.filter(subscribing__user=request.user)
+        queryset = Subscribe.objects.filter(user=request.user)
         serializer = SubscribeSerializer(
             self.paginate_queryset(queryset),
             many=True,

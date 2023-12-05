@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Ingredient, IngredientInRecipe, FavouriteRecipe,
                             Recipe, ShoppingCart, Tag)
-from rest_framework import serializers,status
+from rest_framework import serializers
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscribe
@@ -72,8 +72,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        user = self.context.get('request').user
-        author = self.context.get('author')
+        user = self.context['request'].user
+        author = self.context['author']
         if author == user:
             raise serializers.ValidationError(
                 {'error': 'Нельзя подписаться на самого себя'}
@@ -85,19 +85,22 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(
-            user=self.context.get('request').user, author=obj.author
-        ).exists()
+        return (
+            Subscribe.objects.filter(
+                user=self.context['request'].user,
+                author=obj).exists()
+        )
 
     @staticmethod
     def get_recipes(attrs):
-        all_recipes = Recipe.objects.filter(author=attrs.author)
-        return SmallRecipeSerializer(all_recipes, many=True).data
+        return SmallRecipeSerializer(
+            Recipe.objects.filter(author=attrs.author),
+            many=True,
+        ).data
 
     @staticmethod
     def get_recipes_count(attrs):
-        all_recipes = Recipe.objects.filter(author=attrs.author)
-        return all_recipes.count()
+        return Recipe.objects.filter(author=attrs.author).count()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
