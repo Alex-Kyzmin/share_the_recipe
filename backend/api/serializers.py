@@ -52,6 +52,7 @@ class SubscribeSerializer(ProjectUserSerializer):
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
+        model = User
         fields = (
             'id',
             'username',
