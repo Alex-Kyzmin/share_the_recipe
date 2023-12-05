@@ -92,15 +92,17 @@ class SubscribeSerializer(serializers.ModelSerializer):
         )
 
     @staticmethod
-    def get_recipes(attrs):
-        return SmallRecipeSerializer(
-            Recipe.objects.filter(author=attrs.author),
-            many=True,
-        ).data
+    def get_recipes_count(obj):
+        return (obj.recipes.count()-1)
 
-    @staticmethod
-    def get_recipes_count(attrs):
-        return Recipe.objects.filter(author=attrs.author).count()
+    def get_recipes(self, obj):
+        request = self.context['request']
+        limit = request.GET.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if limit:
+            recipes = recipes[:int(limit)]
+        serializer = SmallRecipeSerializer(recipes, many=True, read_only=True)
+        return serializer.data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
