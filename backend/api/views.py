@@ -40,7 +40,7 @@ class CustomUserViewSet(UserViewSet):
                 context={"request": request},
             )
             if serializer.is_valid(raise_exception=True):
-                serializer.save(user=request.user, author=author)
+                Subscribe.objects.create(user=request.user, author=author)
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -56,7 +56,6 @@ class CustomUserViewSet(UserViewSet):
                 user=request.user,
                 author=author
             ).delete()
-            
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
@@ -110,7 +109,7 @@ class RecipeViewSet(ModelViewSet):
             serializer = FavoriteSerializer(data=request.data,
                                             context=context,)
             if serializer.is_valid(raise_exception=True):
-                serializer.save(user=request.user, recipe=recipe)
+                FavouriteRecipe.objects.create(user=request.user, recipe=recipe)
                 return Response(
                     data=serializer.data,
                     status=status.HTTP_201_CREATED,
@@ -143,7 +142,7 @@ class RecipeViewSet(ModelViewSet):
                 context=context,
             )
             if serializer.is_valid(raise_exception=True):
-                serializer.save(user=request.user, recipe=recipe)
+                ShoppingCart.objects.create(user=request.user, recipe=recipe)
                 return Response(data=serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -170,9 +169,13 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request, **kwargs):
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
+        ).prefetch_related(
+            'recipes__shopping_cart',
+            'user',
+            'ingredient',
         ).values(
             'ingredient__name',
-            'ingredient__measurement_unit'
+            'ingredient__measurement_unit',
         ).annotate(amount=Sum('amount'))
 
         shopping_cart = (
