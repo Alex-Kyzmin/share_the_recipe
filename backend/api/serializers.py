@@ -71,9 +71,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'recipes_count',
         )
 
-    def validate(self, attrs):
+    def validate(self, data):
         user = self.context['request'].user
-        author = self.context['author']
+        author = self.instance
         if author == user:
             raise serializers.ValidationError(
                 {'error': 'Нельзя подписаться на самого себя'}
@@ -82,7 +82,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'error': 'Вы уже подписаны на этого автора'}
             )
-        return attrs
+        return data
 
     def get_is_subscribed(self, obj):
         return (
@@ -92,15 +92,15 @@ class SubscribeSerializer(serializers.ModelSerializer):
         )
 
     @staticmethod
-    def get_recipes(attrs):
+    def get_recipes(data):
         return SmallRecipeSerializer(
-            Recipe.objects.filter(author=attrs.author),
+            Recipe.objects.filter(author=data.author),
             many=True,
         ).data
 
     @staticmethod
-    def get_recipes_count(attrs):
-        return Recipe.objects.filter(author=attrs.author).count()
+    def get_recipes_count(data):
+        return Recipe.objects.filter(author=data.author).count()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -279,14 +279,14 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = FavouriteRecipe
         fields = ('id', 'name', 'cooking_time', 'image')
 
-    def validate(self, attrs):
+    def validate(self, data):
         user = self.context['request'].user
         recipe = self.context['recipe']
         if FavouriteRecipe.objects.filter(user=user, recipe=recipe).exists():
             raise serializers.ValidationError(
                 {'error': 'Рецепт уже находится в избранном'}
             )
-        return attrs
+        return data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -299,11 +299,11 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         fields = ('id', 'name', 'cooking_time', 'image')
 
-    def validate(self, attrs):
+    def validate(self, data):
         user = self.context['request'].user
         recipe = self.context['recipe']
         if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
             raise serializers.ValidationError(
                 {'error': 'Рецепт уже находится в списке покупок'}
             )
-        return attrs
+        return data
