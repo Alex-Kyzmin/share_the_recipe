@@ -16,9 +16,9 @@ from users.models import Subscribe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminOrReadOnly, IsAdminAuthorOrReadOnly
-from .serializers import (IngredientSerializer, ProjectUserCreateSerializer, ProjectUserSerializer,
-                          ReadRecipeSerializer, RecordRecipeSerializer, SubscribeSerializer,
-                          SmallRecipeSerializer, TagSerializer,)
+from .serializers import (IngredientSerializer, FavoriteSerializer, ProjectUserCreateSerializer,
+                          ReadRecipeSerializer, RecordRecipeSerializer, ShoppingCartSerializer,
+                          SubscribeSerializer, SmallRecipeSerializer,TagSerializer)
 
 User = get_user_model()
 
@@ -27,6 +27,28 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = ProjectPagination
     serializer_class = ProjectUserCreateSerializer
+
+    @action(detail=True, methods=['POST', 'DELETE'],
+            permission_classes=[IsAuthenticated],)
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        author = get_object_or_404(User, id=self.kwargs['id'])
+
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(
+                author,
+                data=request.data,
+                context={"request": request},
+            )
+            serializer.is_valid(raise_exception=True)
+            Subscribe.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            subscription = get_object_or_404(Subscribe, user=user,
+                                             author=author)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
@@ -38,28 +60,6 @@ class CustomUserViewSet(UserViewSet):
             context={'request': request},
         )
         return self.get_paginated_response(serializer.data)
-
-    @action(detail=True, methods=['POST', 'DELETE'],
-            permission_classes=[IsAuthenticated],)
-    def subscribe(self, request, **kwargs):
-        author = self.get_object()
-
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(
-                author,
-                data=request.data,
-                context={"request": request},
-            )
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe,
-                                             user=request.user,
-                                             author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -97,23 +97,28 @@ class RecipeViewSet(ModelViewSet):
         recipe = self.get_object()
 
         if request.method == 'POST':
-            context = {'request': request, "recipe": recipe}
-            serializer = SmallRecipeSerializer(
-                recipe,
-                data=request.data,
-                context=context,)
+            context = {'request': request, 'recipe': recipe}
+            serializer = FavoriteSerializer(data=request.data,
+                                            context=context,)
             if serializer.is_valid(raise_exception=True):
                 serializer.save(user=request.user, recipe=recipe)
-                return Response(data=serializer.data,
-                                status=status.HTTP_201_CREATED,)
+                return Response(
+                    data=serializer.data,
+                    status=status.HTTP_201_CREATED,
+                )
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         if request.method == 'DELETE':
-            get_object_or_404(
-                 FavouriteRecipe,
-                 recipe=recipe,
+            if not FavouriteRecipe.objects.filter(
                 user=request.user,
-            ).delete()
+                recipe=recipe,
+                ).exists():
+                return Response(
+                    {'error': 'У вас не было этого рецепта в списке избранных'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            get_object_or_404(FavouriteRecipe,recipe=recipe,
+                              user=request.user,).delete()
             return Response({'detail': 'Рецепт удален из избранного!'},
                             status=status.HTTP_204_NO_CONTENT)
 
@@ -123,8 +128,8 @@ class RecipeViewSet(ModelViewSet):
         recipe = self.get_object()
         
         if request.method == 'POST':
-            context = {'request': request, "recipe": recipe}
-            serializer = SmallRecipeSerializer(
+            context = {'request': request, 'recipe': recipe}
+            serializer = ShoppingCartSerializer(
                 data=request.data,
                 context=context,
             )
@@ -135,6 +140,14 @@ class RecipeViewSet(ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         if request.method == 'DELETE':
+            if not ShoppingCart.objects.filter(
+                user=request.user,
+                recipe=recipe,
+                ).exists():
+                return Response(
+                    {'error': 'У вас не было этого рецепта в списке покупок'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             get_object_or_404(
                  ShoppingCart,
                  recipe=recipe,
@@ -142,7 +155,6 @@ class RecipeViewSet(ModelViewSet):
             ).delete()
             return Response({'detail': 'Рецепт удален из списка покупок!'},
                             status=status.HTTP_204_NO_CONTENT)
-        
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
