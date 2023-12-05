@@ -42,7 +42,7 @@ class ProjectUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        if user.iis_authenticated:
+        if user.is_authenticated:
             return Subscribe.objects.filter(user=user, author=obj).exists()
         return False
 
