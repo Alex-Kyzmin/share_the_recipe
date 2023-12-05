@@ -42,28 +42,20 @@ class ProjectUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
-        return (
-            user.is_authenticated and
-            Subscribe.objects.filter(user=user, author=obj).exists()
-        )
+        if user.iis_authenticated:
+            return Subscribe.objects.filter(user=user, author=obj).exists()
+        return False
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
-    email = serializers.ReadOnlyField(source='author.email')
-    id = serializers.ReadOnlyField(source='author.id')
-    username = serializers.ReadOnlyField(source='author.username')
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
-    is_subscribed = serializers.SerializerMethodField()
+class SubscribeSerializer(ProjectUserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = Subscribe
         fields = (
-            'email',
             'id',
             'username',
+            'email',
             'first_name',
             'last_name',
             'is_subscribed',
@@ -84,22 +76,16 @@ class SubscribeSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+
+    @staticmethod
+    def get_recipes(obj):
+        all_recipes = Recipe.objects.filter(author=obj)
+        return SmallRecipeSerializer(all_recipes, many=True).data
+
 
     @staticmethod
     def get_recipes_count(obj):
         return obj.recipes.count()
-
-    def get_recipes(self, obj):
-        request = self.context['request']
-        limit = request.GET.get('recipes_limit')
-        recipes = obj.recipes.all()
-        if limit:
-            recipes = recipes[:int(limit)]
-        serializer = ReadRecipeSerializer(recipes, many=True, read_only=True)
-        return serializer.data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
