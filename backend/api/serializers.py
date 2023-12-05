@@ -94,13 +94,13 @@ class SubscribeSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_recipes(data):
         return SmallRecipeSerializer(
-            Recipe.objects.filter(author=data.author),
+            Recipe.objects.filter(author=data.user),
             many=True,
         ).data
 
     @staticmethod
     def get_recipes_count(data):
-        return Recipe.objects.filter(author=data.author).count()
+        return Recipe.objects.filter(author=data.user).count()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
