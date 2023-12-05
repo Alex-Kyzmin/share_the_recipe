@@ -41,29 +41,36 @@ class ProjectUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return Subscribe.objects.filter(user=user, author=obj).exists()
-        return False
+        request = self.context.get('request')
+        return (
+            request
+            and request.user.is_authenticated
+            and obj.following.filter(user=request.user).exists()
+        )
 
 
-class SubscribeSerializer(ProjectUserSerializer):
+class SubscribeSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta(ProjectUserSerializer.Meta):
-        model = User
+    class Meta:
+        model = Subscribe
         fields = (
+            'email',
             'id',
             'username',
-            'email',
             'first_name',
             'last_name',
             'is_subscribed',
             'recipes',
             'recipes_count',
         )
-        read_only_fields = ('email', 'username')
 
     def validate(self, data):
         user = self.context['request'].user
@@ -78,15 +85,19 @@ class SubscribeSerializer(ProjectUserSerializer):
             )
         return data
 
+    def get_is_subscribed(self, obj):
+        return Subscribe.objects.filter(
+            user=self.context['request'].user, 
+            author=obj.author
+        ).exists()
 
     @staticmethod
     def get_recipes(obj):
-        all_recipes = Recipe.objects.filter(author=obj)
-        return SmallRecipeSerializer(all_recipes, many=True).data
+        recipes = Recipe.objects.filter(author=obj)
+        return SmallRecipeSerializer(recipes, many=True).data
 
 
-    @staticmethod
-    def get_recipes_count(obj):
+    def get_recipes_count(self, obj):
         return obj.recipes.count()
 
 
