@@ -51,7 +51,7 @@ class SubscribeSerializer(ProjectUserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(ProjectUserSerializer.Meta):
         model = User
         fields = (
             'id',
@@ -63,6 +63,7 @@ class SubscribeSerializer(ProjectUserSerializer):
             'recipes',
             'recipes_count',
         )
+        read_only_fields = ('email', 'username')
 
     def validate(self, data):
         user = self.context['request'].user
