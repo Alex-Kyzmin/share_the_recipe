@@ -14,7 +14,7 @@ User = get_user_model()
 
 
 class ProjectUserCreateSerializer(UserCreateSerializer):
-     class Meta:
+    class Meta:
         model = User
         fields = (
             'id',
@@ -24,6 +24,13 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
             'last_name',
             'password',
         )
+    
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Невозможно создать пользователя с таким именем!'
+            )
+        return value
 
 
 class ProjectUserSerializer(UserSerializer):
@@ -44,93 +51,27 @@ class ProjectUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+        return Subscribe.objects.filter(user=user, author=obj.id).exists()
 
 
-class SmallRecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
+class SubscribeSerializer(ProjectUserSerializer):
+    recipes = SerializerMethodField(read_only=True)
+    recipes_count = SerializerMethodField(read_only=True)
 
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
-        )
+    class Meta(ProjectUserSerializer.Meta):
+        fields = ProjectUserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
-
-class SubscriptionsSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count',
-        )
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
-
-
-    def get_recipes(self, obj):
-        request = self.context['request']
-        limit = request.GET.get('recipes_limit')
-        recipes = obj.recipes.all()
+    def get_recipes(self, object):
+        request = self.context.get('request')
+        context = {'request': request}
+        limit = request.query_params.get('recipes_limit')
+        queryset = object.recipes.all()
         if limit:
-            recipes = recipes[:int(limit)]
-        serializer = SmallRecipeSerializer(
-            recipes,
-            many=True,
-            read_only=True,
-        )
-        return serializer.data
-
-    @staticmethod
-    def get_recipes_count(obj):
-        return obj.recipes.count()
-
-
-class SubscribeSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
-    email = serializers.ReadOnlyField()
-    username = serializers.ReadOnlyField()
-    recipes = SmallRecipeSerializer(
-        many=True,
-        read_only=True,
-    )
-    recipes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count',
-        )
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+            queryset = queryset[:int(limit)]
+        return SmallRecipeSerializer(
+            queryset,
+            context=context,
+            many=True).data
 
     @staticmethod
     def get_recipes_count(obj):
@@ -155,6 +96,19 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
+
+
+class SmallRecipeSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
 
 
 class ReadRecipeSerializer(serializers.ModelSerializer):
