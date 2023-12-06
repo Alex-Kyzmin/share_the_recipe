@@ -39,28 +39,21 @@ class ProjectUserSerializer(UserSerializer):
             'last_name',
             'is_subscribed',
         )
-
+    
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        return (
-            request
-            and request.user.is_authenticated
-            and obj.following.filter(user=request.user).exists()
-        )
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(user=user, author=obj).exists()
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
-    email = serializers.ReadOnlyField(source='author.email')
-    id = serializers.ReadOnlyField(source='author.id')
-    username = serializers.ReadOnlyField(source='author.username')
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
+class SubscriptionsSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = Subscribe
+        model = User
         fields = (
             'email',
             'id',
@@ -72,32 +65,62 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'recipes_count',
         )
 
-    def validate(self, data):
-        user = self.context['request'].user
-        author = self.instance
-        if author == user:
-            raise serializers.ValidationError(
-                {'error': 'Нельзя подписаться на самого себя'}
-            )
-        if Subscribe.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError(
-                {'error': 'Вы уже подписаны на этого автора'}
-            )
-        return data
-
     def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(
-            user=self.context['request'].user, 
-            author=obj.author
-        ).exists()
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(user=user, author=obj).exists()
+
+
+    def get_recipes(self, obj):
+        request = self.context['request']
+        limit = request.GET.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if limit:
+            recipes = recipes[:int(limit)]
+        serializer = SmallRecipeSerializer(
+            recipes,
+            many=True,
+            read_only=True,
+        )
+        return serializer.data
 
     @staticmethod
-    def get_recipes(obj):
-        recipes = Recipe.objects.filter(author=obj)
-        return SmallRecipeSerializer(recipes, many=True).data
+    def get_recipes_count(obj):
+        return obj.recipes.count()
 
 
-    def get_recipes_count(self, obj):
+class SubscribeSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    email = serializers.ReadOnlyField()
+    username = serializers.ReadOnlyField()
+    recipes = 'SmallRecipeSerializer'(
+        many=True,
+        read_only=True,
+    )
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(user=user, author=obj).exists()
+
+    @staticmethod
+    def get_recipes_count(obj):
         return obj.recipes.count()
 
 
@@ -160,14 +183,14 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
         return ingredients
     
     def get_is_favorited(self, obj):
-        user = self.context['request'].user
+        user = self.context.get('request').user
         if (user.is_authenticated
             and user.favorites.filter(recipe=obj).exists()):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
+        user = self.context.get('request').user
         if (user.is_authenticated
             and user.shopping_cart.filter(recipe=obj).exists()):
             return True
@@ -278,7 +301,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cooking_time', 'image')
 
     def validate(self, data):
-        user = self.context['request'].user
+        user = self.context.get('request').user
         recipe = self.context['recipe']
         if FavouriteRecipe.objects.filter(user=user, recipe=recipe).exists():
             raise serializers.ValidationError(
@@ -298,7 +321,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cooking_time', 'image')
 
     def validate(self, data):
-        user = self.context['request'].user
+        user = self.context.get('request').user
         recipe = self.context['recipe']
         if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
             raise serializers.ValidationError(
