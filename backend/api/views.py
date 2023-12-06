@@ -29,9 +29,9 @@ class CustomUserViewSet(UserViewSet):
 
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=[IsAuthenticated],)
-    def subscribe(self, request, id):
+    def subscribe(self, request, **kwargs):
         user = request.user
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User, id=self.kwargs.get('id'))
 
         if request.method == 'POST':
 
@@ -71,7 +71,7 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
     def subscriptions(self, request):
-        queryset = User.objects.filter(subscribing_user=request.user)
+        queryset = User.objects.filter(subscribing__user=request.user)
         serializer = SubscribeSerializer(
             self.paginate_queryset(queryset),
             many=True,
@@ -179,10 +179,6 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request, **kwargs):
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
-        ).prefetch_related(
-            'recipes__shopping_cart',
-            'user',
-            'ingredient',
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit',
