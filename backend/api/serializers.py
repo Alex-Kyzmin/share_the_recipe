@@ -59,7 +59,10 @@ class SubscribeSerializer(ProjectUserSerializer):
     recipes_count = SerializerMethodField(read_only=True)
 
     class Meta(ProjectUserSerializer.Meta):
-        fields = ProjectUserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        fields = ProjectUserSerializer.Meta.fields + (
+            'recipes',
+            'recipes_count',
+        )
 
     def get_recipes(self, object):
         request = self.context.get('request')

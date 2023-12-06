@@ -26,7 +26,6 @@ User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = ProjectPagination
-    serializer_class = ProjectUserSerializer
 
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=[IsAuthenticated],)
