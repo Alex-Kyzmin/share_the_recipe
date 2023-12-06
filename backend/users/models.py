@@ -27,6 +27,7 @@ class ProjectUser(AbstractUser):
         max_length=150,
         verbose_name='Твоя фамилия'
     )
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = [
         'first_name',
         'last_name',
