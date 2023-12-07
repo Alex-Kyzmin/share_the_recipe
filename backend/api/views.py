@@ -45,16 +45,10 @@ class CustomUserViewSet(UserViewSet):
                 return Response({'error': 'Невозможно подписаться на себя'},
                                 status=status.HTTP_400_BAD_REQUEST)
             
-            serializer = SubscribeSerializer(
-                author,
-                data=request.data,
-                context={'request': request, 'user': user},
-            )
-            serializer.is_valid(raise_exception=True)
             Subscribe.objects.create(user=user, author=author)
             return Response(
                 {'detail': 'Вы подписались на автора'},
-                data=serializer.data, status=status.HTTP_201_CREATED,
+                status=status.HTTP_201_CREATED,
             )
 
         if request.method == 'DELETE':
