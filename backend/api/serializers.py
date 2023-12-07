@@ -54,6 +54,33 @@ class ProjectUserSerializer(UserSerializer):
         return Subscribe.objects.filter(user=user, author=obj).exists()
 
 
+class SubscribeSerializer(ProjectUserSerializer):
+    recipes = SerializerMethodField(read_only=True)
+    recipes_count = SerializerMethodField(read_only=True)
+
+    class Meta(ProjectUserSerializer.Meta):
+        fields = ProjectUserSerializer.Meta.fields + (
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_recipes(self, object):
+        request = self.context.get('request')
+        context = {'request': request}
+        limit = request.query_params.get('recipes_limit')
+        queryset = object.recipes.all()
+        if limit:
+            queryset = queryset[:int(limit)]
+        return SmallRecipeSerializer(
+            queryset,
+            context=context,
+            many=True).data
+
+    @staticmethod
+    def get_recipes_count(obj):
+        return obj.recipes.count()
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient

@@ -16,8 +16,8 @@ from users.models import Subscribe
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminOrReadOnly, IsAdminAuthorOrReadOnly
-from .serializers import (IngredientSerializer, FavoriteSerializer, ProjectUserSerializer,
-                          ReadRecipeSerializer, RecordRecipeSerializer, ShoppingCartSerializer,
+from .serializers import (IngredientSerializer, FavoriteSerializer, ReadRecipeSerializer,
+                          RecordRecipeSerializer, ShoppingCartSerializer,
                           SubscribeSerializer, TagSerializer)
 
 User = get_user_model()
