@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 from dotenv import load_dotenv
 from environs import Env
@@ -11,7 +12,7 @@ env.read_env
 
 SECRET_KEY = os.getenv('SECRET_KEY', "default_key")
 
-DEBUG = True
+DEBUG = env.bool('DEBUG_VALUE', False)
 
 ALLOWED_HOSTS = [os.getenv('IP_HOST'), os.getenv('DOMAIN_HOST'), '127.0.0.1', 'localhost',]
 
@@ -24,9 +25,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Подключаем модули к проекту.
-    'rest_framework', # модуль фреймворк DRF.
+    'rest_framework', # фреймворк DRF.
     'rest_framework.authtoken', # модуль authtoken фреймворка DRF.
-    'djoser', # модуль библиотеки djoser.
+    'djoser', # библиотека djoser.
     # Подключаем приложение к проекту.
     'users.apps.UsersConfig', # приложение отвечеющее за пользователей проекта.
     'recipes.apps.RecipesConfig', # приложение проекта рецепты.
@@ -64,6 +65,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 
+# подключаем к проекту PostgreSQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -75,7 +77,7 @@ DATABASES = {
     }
 }
 
-# Указываем ссылку на собственную модель "пользователя" в константе.
+# Указываем ссылку на модель "пользователя" проекта в константе.
 AUTH_USER_MODEL = 'users.ProjectUser'
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -94,6 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
+    # переопределяем дефолтный класс разрешения к path проекта
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
@@ -104,7 +107,9 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    # переопределяем дефолтное поля авторизации для входа на сайт
     "LOGIN_FIELD": "email",
+    # переопределяем дефолтные сериализаторы поля различных запросов к пользователям
     'SERIALIZERS': {
         'user_create': 'api.serializers.ProjectUserCreateSerializer',
         'user': 'api.serializers.ProjectUserSerializer',
@@ -112,6 +117,8 @@ DJOSER = {
     },
 
     'PERMISSIONS': {
+        # переопределяем дефолтный класс разрешений к некоторым 
+        # path проекта для вью - CustomUserViewSet
         'user': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.AllowAny'],
         'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
@@ -132,9 +139,11 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
+# Обозначаем путь к статичным файлам проекта.
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 MEDIA_URL = '/media/'
+# Обозначаем путь к медиа файлам проекта.
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

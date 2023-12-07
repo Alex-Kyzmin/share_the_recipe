@@ -3,6 +3,7 @@ from django.db import models
 
 
 class ProjectUser(AbstractUser):
+    """Модель для данных - пользователь."""
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -49,6 +50,7 @@ class ProjectUser(AbstractUser):
 
 
 class Subscribe(models.Model):
+    """Модель для данных - подписка на автора."""
     user = models.ForeignKey(
         ProjectUser,
         on_delete=models.CASCADE,

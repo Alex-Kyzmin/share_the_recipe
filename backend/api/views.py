@@ -24,6 +24,12 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
+    """
+    Вьюсет для работы с пользователями
+    (создание, редактирование, смена пароля),
+    а так же  для авторизованных пользователей 
+    подписки(создание, удаление и демонстрации подписок).
+    """
     queryset = User.objects.all()
     pagination_class = ProjectPagination
 
@@ -75,6 +81,11 @@ class CustomUserViewSet(UserViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    """
+    Вьюсет для работы с ингридиентами
+    (редактирование - админ, 
+    использование - авторизированные пользователи).
+    """
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -83,12 +94,24 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class TagViewSet(ReadOnlyModelViewSet):
+    """
+    Вьюсет для работы с тэгами для рецептов
+    (редактирование - админ, 
+    использование - авторизированные пользователи).
+    """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAdminOrReadOnly]
 
 
 class RecipeViewSet(ModelViewSet):
+    """
+    Вьюсет для работы с основными возможностями проекта
+    (создание, удаление и редактирование рецептов - админ и автор;
+    добавление в избранное рецептов, а так же скачивание ингридиентов
+    для приготовления рецептов - авторизированный пользователь; 
+    просмотр рецептов - для всех).
+    """
     queryset = Recipe.objects.all()
     permission_classes = [IsAdminAuthorOrReadOnly]
     pagination_class = ProjectPagination
