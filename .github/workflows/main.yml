@@ -66,7 +66,7 @@ jobs:
         with:
           context: ./backend/
           push: true
-          tags: aalexkyzmin/foodgram_backend:latest
+          tags: alexkyzmin/foodgram_backend
 
   # задача - автоматический деплой проекта
   deploy:
