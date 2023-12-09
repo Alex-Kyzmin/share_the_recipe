@@ -1,13 +1,14 @@
 from django.contrib.auth import get_user_model
-from django.db import transaction, models
+from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (Ingredient, IngredientInRecipe, FavouriteRecipe,
-                            Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
+
+from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag)
 from users.models import Subscribe
 
 User = get_user_model()
@@ -15,7 +16,7 @@ User = get_user_model()
 
 class ProjectUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""
-    
+
     class Meta:
         model = User
         fields = (
@@ -26,7 +27,7 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
             'last_name',
             'password',
         )
-    
+
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError(
@@ -49,7 +50,7 @@ class ProjectUserSerializer(UserSerializer):
             'last_name',
             'is_subscribed',
         )
-    
+
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous:
@@ -87,7 +88,7 @@ class SubscribeSerializer(ProjectUserSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ингридиенты."""
-    
+
     class Meta:
         model = Ingredient
         fields = '__all__'
@@ -104,7 +105,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для модели тэг к рецепту."""
-    
+
     class Meta:
         model = Tag
         fields = '__all__'
@@ -151,18 +152,22 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
             amount=models.F('ingredients_amount__amount')
         )
         return ingredients
-    
+
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        if (user.is_authenticated
-            and user.favorites.filter(recipe=obj).exists()):
+        if (
+            user.is_authenticated
+            and user.favorites.filter(recipe=obj).exists()
+        ):
             return True
         return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
-        if (user.is_authenticated
-            and user.shopping_cart.filter(recipe=obj).exists()):
+        if (
+            user.is_authenticated
+            and user.shopping_cart.filter(recipe=obj).exists()
+        ):
             return True
         return False
 
@@ -181,7 +186,6 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = '__all__'
 
-    
     def validate_ingredients(self, value):
         ingredients_list = []
         if not value:
@@ -215,14 +219,14 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
                 )
             tags_list.append(tag)
         return value
-    
+
     def validate_cooking_time(self, value):
         if int(value) < 1:
             raise serializers.ValidationError(
                 'Минимальное время приготовления 1 минута'
             )
         return value
-    
+
     @transaction.atomic
     def create_ingredients_amt(self, ingredients, recipe):
         IngredientInRecipe.objects.bulk_create(
@@ -232,7 +236,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
         )
-    
+
     @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')

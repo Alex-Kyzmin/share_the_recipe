@@ -34,7 +34,7 @@ class ProjectUser(AbstractUser):
         'last_name',
         'email',
     ]
-    
+
     class Meta:
         ordering = ['id']
         verbose_name = 'Пользователь'
@@ -73,6 +73,6 @@ class Subscribe(models.Model):
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-    
+
     def __str__(self):
         return f"Подписчик {self.user} - автор {self.author}"

@@ -1,8 +1,8 @@
 from django.contrib import admin
 
-# настройка админ-зоны для импортируемых моделей 
-from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+# настройка админ-зоны для импортируемых моделей
+from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag)
 
 
 @admin.register(Recipe)
