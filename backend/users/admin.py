@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
 # настройка админ-зоны для импортируемых моделей
 from users.models import ProjectUser, Subscribe
 

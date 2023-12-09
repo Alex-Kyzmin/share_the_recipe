@@ -16,7 +16,7 @@ services:
     restart: always
   
   backend:
-    build: ./backend/
+    image: alexkyzmin/foodgram_backend:latest
     container_name: foodgram_backend
     restart: always
     env_file:
