@@ -13,7 +13,8 @@ env.read_env
 
 SECRET_KEY = os.getenv('SECRET_KEY', "default_key")
 
-DEBUG = env.bool('DEBUG_VALUE', False)
+#DEBUG = env.bool('DEBUG_VALUE', False)
+DEBUG = True
 
 ALLOWED_HOSTS = [os.getenv('IP_HOST'), os.getenv('DOMAIN_HOST'), '127.0.0.1', 'localhost',]
 
@@ -68,13 +69,17 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 # подключаем к проекту PostgreSQL
 DATABASES = {
+    #'default': {
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': os.getenv('POSTGRES_DB', 'django'),
+        #'USER': os.getenv('POSTGRES_USER', 'django'),
+        #'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        #'HOST': os.getenv('DB_HOST', ''),
+        #'PORT': os.getenv('DB_PORT', 5432)
+    #}
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django'),
-        'USER': os.getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -110,6 +115,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     # переопределяем дефолтное поля авторизации для входа на сайт
     "LOGIN_FIELD": "email",
+    'HIDE_USERS': False,
     # переопределяем дефолтные сериализаторы поля различных запросов к пользователям
     'SERIALIZERS': {
         'user_create': 'api.serializers.ProjectUserCreateSerializer',
@@ -120,9 +126,8 @@ DJOSER = {
     'PERMISSIONS': {
         # переопределяем дефолтный класс разрешений к некоторым 
         # path проекта для вью - CustomUserViewSet
-        'user': ['rest_framework.permissions.IsAuthenticated'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-        'token_destroy': ['rest_framework.permissions.IsAuthenticated'],
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
 }
 
@@ -148,3 +153,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Цифровые константы проекта.
+MIN_AMOUNT = 1
+MAX_AMOUNT = 10000
+MIN_COOKING_TIME = 1
+MAX_COOKING_TIME = 4800

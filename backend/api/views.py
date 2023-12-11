@@ -8,7 +8,7 @@ from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import Subscribe
@@ -17,9 +17,9 @@ from .filters import IngredientFilter, RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminAuthorOrReadOnly, IsAdminOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
-                          ReadRecipeSerializer, RecordRecipeSerializer,
-                          ShoppingCartSerializer, SubscribeSerializer,
-                          TagSerializer)
+                          ProjectUserSerializer, ReadRecipeSerializer,
+                          RecordRecipeSerializer, ShoppingCartSerializer,
+                          SubscribeSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -59,6 +59,13 @@ class CustomUserViewSet(UserViewSet):
             )
 
         if request.method == 'DELETE':
+            if not Subscribe.objects.filter(
+                user=user,
+                author=author
+            ).exists():
+                return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+            )
             get_object_or_404(
                 Subscribe,
                 user=user,
@@ -89,7 +96,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     """
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
     filterset_class = IngredientFilter
 
@@ -102,7 +109,7 @@ class TagViewSet(ReadOnlyModelViewSet):
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [AllowAny]
 
 
 class RecipeViewSet(ModelViewSet):
@@ -178,7 +185,7 @@ class RecipeViewSet(ModelViewSet):
                 data=request.data,
                 context=context,
             )
-            if serializer.is_valid(raise_exception=True):
+            if serializer.is_valid():
                 ShoppingCart.objects.create(user=request.user, recipe=recipe)
                 return Response(data=serializer.data,
                                 status=status.HTTP_201_CREATED)

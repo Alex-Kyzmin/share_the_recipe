@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
@@ -28,9 +30,14 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
         )
 
     def validate_username(self, value):
+        vald_value = r'^[\w.@+-]+\Z'
         if value == 'me':
             raise serializers.ValidationError(
                 'Невозможно создать пользователя с таким именем!'
+            )
+        if not re.match(vald_value, value):
+            raise serializers.ValidationError(
+                'Имя не соответствующие регулярному выражению!'
             )
         return value
 
