@@ -154,7 +154,7 @@ class RecipeViewSet(ModelViewSet):
             context = {'request': request, 'recipe': recipe}
             serializer = FavoriteSerializer(data=request.data,
                                             context=context,)
-            if serializer.is_valid(raise_exception=True):
+            if serializer.is_valid():
                 FavouriteRecipe.objects.create(
                     user=request.user,
                     recipe=recipe,
