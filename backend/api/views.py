@@ -34,6 +34,17 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = ProjectPagination
 
+    
+    @action(detail=False, methods=['GET'], url_path='me',
+            permission_classes=[IsAuthenticated],)
+    def me(self, request):
+        serializer = ProjectUserSerializer(
+            self.request.user,
+            context={'request': request}    
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=[IsAuthenticated],)
     def subscribe(self, request, **kwargs):
