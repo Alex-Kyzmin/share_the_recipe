@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import (MinValueValidator, MaxValueValidator,
+                                    RegexValidator)
 from django.db import models
 from django.db.models import UniqueConstraint
-from foodgram.settings import MAX_LENGTH_RECIPE_MODEL, MAX_LENGTH_COLOR
+from foodgram.settings import (MAX_LENGTH_RECIPE_MODEL, MAX_LENGTH_COLOR,
+                               MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,
+                               MIN_COOKING_TIME, MAX_COOKING_TIME)
 
 User = get_user_model()
 
@@ -21,10 +24,10 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ['name']
+        ordering = ('name',)
 
     def __str__(self):
-        return self.name
+        return f'{self.name} - {self.measurement_unit}'
 
 
 class Tag(models.Model):
@@ -52,6 +55,7 @@ class Tag(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -80,8 +84,15 @@ class Recipe(models.Model):
         upload_to='recipes/'
     )
     cooking_time = models.PositiveSmallIntegerField(
-        'Время приготовления блюда',
-        validators=[MinValueValidator(1, message='Не менее 1 минуты!')]
+        verbose_name='Время приготовления блюда',
+        validators=[
+            MinValueValidator(
+                MIN_COOKING_TIME,
+                message='Не менее 1 минуты!'),
+            MaxValueValidator(
+                MAX_COOKING_TIME,
+                message='Не более 32 000 минут!'),
+        ]
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -96,7 +107,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        ordering = ['-id']
+        ordering = ('-id',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -121,20 +132,25 @@ class IngredientInRecipe(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
-        validators=[MinValueValidator(1, message='Не менее 1 единицы')]
+        validators=[
+            MinValueValidator(
+                MIN_INGRREDIENT_VALUE,
+                message='Не менее 1 единицы'
+            ),
+            MaxValueValidator(
+                MAX_INGRREDIENT_VALUE,
+                message='Не менее 1 единицы'
+            ),
+        ]
     )
 
     class Meta:
+        ordering = ('ingredient',)
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
 
     def __str__(self):
-        return (
-            f'{self.recipe.name}:',
-            f'{self.ingredient.name} - ',
-            f'{self.amount}'
-            f'{self.ingredient.measurement_unit}'
-        )
+        return f'{self.amount} - {self.ingredient}'
 
 
 class FavouriteRecipe(models.Model):
@@ -154,16 +170,18 @@ class FavouriteRecipe(models.Model):
     )
 
     class Meta:
+        ordering = ('recipe',)
         verbose_name = 'Избранное'
         verbose_name_plural = verbose_name
         constraints = [
             UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_favourite'
+                fields=['user', 'recipe'],
+                name='unique_favourite',
             )
         ]
 
     def __str__(self):
-        return f'{self.user.get_username} добавил "{self.recipe.name}"'
+        return f'{self.user} добавил "{self.recipe}"'
 
 
 class ShoppingCart(models.Model):
@@ -183,6 +201,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
+        ordering = ('recipe',)
         verbose_name = 'Корзина покупок'
         verbose_name_plural = verbose_name
         constraints = [
@@ -192,4 +211,4 @@ class ShoppingCart(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.get_username} добавил "{self.recipe.name}"'
+        return f'{self.user} добавил "{self.recipe}"'

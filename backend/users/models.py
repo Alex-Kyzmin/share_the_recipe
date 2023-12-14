@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from foodgram.settings import MAX_LENGTH_EMAIL, MAX_LENGTH_USER_MODEL
 
@@ -37,7 +38,7 @@ class ProjectUser(AbstractUser):
     ]
 
     class Meta:
-        ordering = ['id']
+        ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         constraints = [
@@ -66,14 +67,23 @@ class Subscribe(models.Model):
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['author_id']
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'], name='unique_subscription'
+                fields=['user', 'author'],
+                name='unique_subscription',
             )
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
+    def clean(self):
+        if self.user == self.author:
+            raise ValidationError('Невозможно подписаться на себя')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Подписчик {self.user} - автор {self.author}"
+        return f'Подписчик {self.user} - автор {self.author}'

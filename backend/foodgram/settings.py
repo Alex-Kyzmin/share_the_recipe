@@ -154,7 +154,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Цифровые константы проекта.
+# Числовые константы проекта.
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_USER_MODEL = 150
 MAX_LENGTH_RECIPE_MODEL = 200
@@ -164,4 +164,4 @@ MAX_INGRREDIENT_VALUE = 10*2
 INLAIN_MIN = 1
 INLAIN_MAX = 15
 MIN_COOKING_TIME = 1
-MIN_COOKING_TIME = 32767
+MAX_COOKING_TIME = 32000
