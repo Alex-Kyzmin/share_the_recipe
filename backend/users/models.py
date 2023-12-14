@@ -1,11 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from foodgram.settings import MAX_LENGTH_EMAIL, MAX_LENGTH_USER_MODEL
 
 
 class ProjectUser(AbstractUser):
     """Модель для данных - пользователь."""
     username = models.CharField(
-        max_length=150,
+        max_length=MAX_LENGTH_USER_MODEL,
         unique=True,
         verbose_name="Твой никнэйм",
         error_messages={
@@ -13,7 +14,7 @@ class ProjectUser(AbstractUser):
         },
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=MAX_LENGTH_EMAIL,
         unique=True,
         verbose_name='Твоя электронная почта',
         error_messages={
@@ -21,11 +22,11 @@ class ProjectUser(AbstractUser):
         },
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=MAX_LENGTH_USER_MODEL,
         verbose_name='Твое имя'
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=MAX_LENGTH_USER_MODEL,
         verbose_name='Твоя фамилия'
     )
     USERNAME_FIELD = 'username'

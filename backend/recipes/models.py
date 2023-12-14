@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+from foodgram.settings import MAX_LENGTH_RECIPE_MODEL, MAX_LENGTH_COLOR
 
 User = get_user_model()
 
@@ -9,11 +10,11 @@ User = get_user_model()
 class Ingredient(models.Model):
     """Модель для данных - Ингридиент."""
     name = models.CharField(
-        max_length=100,
+        max_length=MAX_LENGTH_RECIPE_MODEL,
         verbose_name='Название',
     )
     measurement_unit = models.CharField(
-        max_length=100,
+        max_length=MAX_LENGTH_RECIPE_MODEL,
         verbose_name='Единица измерения',
     )
 
@@ -23,18 +24,18 @@ class Ingredient(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f'{self.name}, {self.measurement_unit}'
+        return self.name
 
 
 class Tag(models.Model):
     """Модель для данных - Тэг к рецепту."""
     name = models.CharField(
-        max_length=200,
+        max_length=MAX_LENGTH_RECIPE_MODEL,
         unique=True,
         verbose_name='Название',
     )
     color = models.CharField(
-        max_length=7,
+        max_length=MAX_LENGTH_COLOR,
         unique=True,
         verbose_name="Цвет HEX",
         validators=[
@@ -45,7 +46,7 @@ class Tag(models.Model):
         ],
     )
     slug = models.SlugField(
-        max_length=200,
+        max_length=MAX_LENGTH_RECIPE_MODEL,
         unique=True,
         verbose_name='Уникальный слаг',
     )
@@ -61,7 +62,7 @@ class Tag(models.Model):
 class Recipe(models.Model):
     """ Модель для данных - Рецепт."""
     name = models.CharField(
-        max_length=200,
+        max_length=MAX_LENGTH_RECIPE_MODEL,
         verbose_name='Название блюда',
     )
     author = models.ForeignKey(
@@ -100,7 +101,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.name
+        return self.name[:10]
 
 
 class IngredientInRecipe(models.Model):
@@ -128,11 +129,11 @@ class IngredientInRecipe(models.Model):
         verbose_name_plural = 'Ингредиенты в рецептах'
 
     def __str__(self):
-        ingredient = self.ingredient.name
-        ingredient_unit = self.ingredient.measurement_unit
-        amount = self.amount
         return (
-            f'{ingredient} ({ingredient_unit}) - {amount} '
+            f'{self.recipe.name}:',
+            f'{self.ingredient.name} - ',
+            f'{self.amount}'
+            f'{self.ingredient.measurement_unit}'
         )
 
 
@@ -162,7 +163,7 @@ class FavouriteRecipe(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user} добавил "{self.recipe}" в Избранное'
+        return f'{self.user.get_username} добавил "{self.recipe.name}"'
 
 
 class ShoppingCart(models.Model):
@@ -191,4 +192,4 @@ class ShoppingCart(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user} добавил "{self.recipe}" в список для покупок'
+        return f'{self.user.get_username} добавил "{self.recipe.name}"'
