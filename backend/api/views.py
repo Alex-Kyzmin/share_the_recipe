@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import Subscribe
 
-from .filters import IngredientFilter, RecipeFilter
+from .filters import RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminAuthorOrReadOnly, IsAdminOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,

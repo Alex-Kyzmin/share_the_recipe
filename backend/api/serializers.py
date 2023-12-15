@@ -284,6 +284,10 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {'ingredients': 'Минимальное значение - 1 ингредиент!'}
+            )
         if len(value) != len(set([element['id'] for element in value])):
             raise serializers.ValidationError(
                 {'ingredients': 'Этот ингридиент уже добавлен!'}
@@ -291,6 +295,10 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         return value
 
     def validate_tags(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {'tags': 'Выбирете хотя бы 1 тег для рецепта!'}
+            )
         if len(value) != len(set(element.id for element in value)):
             raise serializers.ValidationError(
                 {'ingredients': 'Этот тэг уже добавлен!'}
