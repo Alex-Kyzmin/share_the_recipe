@@ -170,7 +170,6 @@ class FavouriteRecipe(models.Model):
     )
 
     class Meta:
-        ordering = ('recipe',)
         verbose_name = 'Избранное'
         verbose_name_plural = verbose_name
         constraints = [
@@ -201,7 +200,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        ordering = ('recipe',)
+        ordering = ('-id',)
         verbose_name = 'Корзина покупок'
         verbose_name_plural = verbose_name
         constraints = [

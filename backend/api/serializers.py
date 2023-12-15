@@ -1,6 +1,8 @@
+import base64
 import re
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -9,8 +11,11 @@ from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.fields import IntegerField, SerializerMethodField
+from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.relations import PrimaryKeyRelatedField
 from users.models import Subscribe
+from foodgram.settings import (MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,
+                               MIN_COOKING_TIME, MAX_COOKING_TIME)
 
 User = get_user_model()
 
@@ -61,7 +66,7 @@ class ProjectUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+        return obj.subscribing.filter(user=user).exists()
 
 
 class SubscribeSerializer(ProjectUserSerializer):

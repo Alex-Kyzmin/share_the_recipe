@@ -17,7 +17,10 @@ class IngredientFilter(FilterSet):
 class RecipeFilter(FilterSet):
     """Фильтры для вью - рецепты."""
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
-
+    author = filters.AllValuesFilter(field_name='author')
+    ingredients = filters.AllValuesMultipleFilter(
+        field_name='ingredients__name'
+    )
     is_favorited = filters.BooleanFilter(
         method='filter_is_favorited',
     )

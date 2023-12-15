@@ -2,22 +2,50 @@ from django.contrib import admin
 # настройка админ-зоны для импортируемых моделей
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
+from foodgram.settings import (INLAIN_MAX, INLAIN_MIN)
+
+
+class IngredientInRecipeInline(admin.TabularInline):
+    model = Recipe.ingredients.through
+    list_display = (
+        'id',
+        'recipe',
+        'ingredient',
+        'amount',
+    )
+    min_num = INLAIN_MIN
+    max_num = INLAIN_MAX
 
 
 @admin.register(Recipe)
 class RecipesAdmin(admin.ModelAdmin):
+    inlines = (IngredientInRecipeInline,)
     list_display = (
         'id',
         'name',
         'author',
         'count_favorites',
+        'text',
+        'cooking_time',
+        'image',
+        'tags_list',
+        'ingredients_list',
     )
     list_filter = ('author', 'name', 'tags',)
     readonly_fields = ('count_favorites',)
-    search_fields = ('name', 'author')
+    search_fields = ('name',)
 
+    @admin.display(description='Добавлено в избранное')
     def count_favorites(self, obj):
         return obj.favorites.count()
+    
+    @admin.display(description='Ингридиенты')
+    def ingredients_list(self, obj):
+        return ','.join([i.name for i in obj.ingredients.all()])
+    
+    @admin.display(description='Тэги')
+    def tags_list(self, obj):
+        return ','.join([i.name for i in obj.tags.all()])
 
 
 @admin.register(Ingredient)
