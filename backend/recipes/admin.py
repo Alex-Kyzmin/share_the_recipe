@@ -37,7 +37,7 @@ class RecipesAdmin(admin.ModelAdmin):
 
     @admin.display(description='Добавлено в избранное')
     def count_favorites(self, obj):
-        return obj.favorites.count()
+        return obj.favorites_recipe.count()
     
     @admin.display(description='Ингридиенты')
     def ingredients_list(self, obj):
@@ -51,8 +51,8 @@ class RecipesAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit',)
+    search_fields = ('name', 'measurement_unit',)
     list_filter = ('name',)
-
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -61,12 +61,13 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe',)
+    list_display = ('id', 'user', 'recipe',)
 
 
 @admin.register(FavouriteRecipe)
 class FavouriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'recipe',)
+    list_display = ('id', 'user', 'recipe',)
+    list_editable = ('user', 'recipe',)
 
 
 @admin.register(IngredientInRecipe)

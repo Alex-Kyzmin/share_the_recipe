@@ -14,9 +14,10 @@ class UserAdmin(UserAdmin):
         'email',
         'first_name',
         'last_name',
+        'password',
     )
     list_filter = ('email', 'username',)
-    search_fields = ('username',)
+    search_fields = ('email', 'username',)
 
 
 @admin.register(Subscribe)
