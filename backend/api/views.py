@@ -35,7 +35,7 @@ class CustomUserViewSet(UserViewSet):
     pagination_class = ProjectPagination
 
     @action(detail=False, methods=['GET'], url_path='me',
-            permission_classes=[IsAuthenticated],)
+            permission_classes=[IsAuthenticated])
     def me(self, request):
         serializer = ProjectUserSerializer(self.request.user,
                                            context={'request': request})
@@ -45,11 +45,10 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=True, methods=['POST'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, id):
-        user = request.user
         author = get_object_or_404(User, id=id)
 
-        if Subscribe.objects.filter(user=user,
-                                    author=author).exists():
+        if Subscribe.objects.filter(user=request.user,
+                                    author=author):
             return Response({'error': 'Вы уже подписаны'},
                             status=status.HTTP_400_BAD_REQUEST)
         
@@ -63,30 +62,20 @@ class CustomUserViewSet(UserViewSet):
             context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        Subscribe.objects.create(user=user, author=author)
+        Subscribe.objects.create(user=request.user, author=author)
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
     
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
-        user = request.user
         author = get_object_or_404(User, id=id)
-        if not Subscribe.objects.filter(
-            user=user,
-            author=author
-        ).exists():
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        get_object_or_404(
-            Subscribe,
-            user=user,
-            author=author
-        ).delete()
-        return Response(
-            {'detail': 'Вы отписались от автора'},
-            status=status.HTTP_204_NO_CONTENT,
-        )
+        if not Subscribe.objects.filter(user=request.user,
+                                        author=author):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        get_object_or_404(Subscribe, user=request.user,
+                          author=author).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated])
