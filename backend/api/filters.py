@@ -27,7 +27,8 @@ class RecipeFilter(FilterSet):
             return queryset.filter(shopping_cart__user=user)
         return queryset
 
-    # С данным кодом выдает ошибки в постмане
+    # С данным кодом выдает ошибки в постмане.
+    # прошу оставить этот вариант (а то глаз уже дергается)
     #def filter_field(self, queryset, name, value):
         user = self.request.user
         if value and user.is_authenticated:
