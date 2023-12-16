@@ -47,9 +47,9 @@ class CustomUserViewSet(UserViewSet):
 
     @action(detail=True, methods=['POST'],
             permission_classes=[IsAuthenticated],)
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, id):
         user = request.user
-        author = get_object_or_404(User, id=kwargs['id'])
+        author = get_object_or_404(User, id=id)
         if Subscribe.objects.filter(
             user=user,
             author=author,
@@ -72,9 +72,9 @@ class CustomUserViewSet(UserViewSet):
         )
     
     @subscribe.mapping.delete
-    def delete_subscribe(self, request, **kwargs):
+    def delete_subscribe(self, request, id):
         user = request.user
-        author = get_object_or_404(User, id=kwargs['id'])
+        author = get_object_or_404(User, id=id)
         if not Subscribe.objects.filter(
             user=user,
             author=author
