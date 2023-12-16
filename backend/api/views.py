@@ -45,47 +45,46 @@ class CustomUserViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-    @action(detail=True, methods=['POST', 'DELETE'],
+    @action(detail=True, methods=['POST'],
             permission_classes=[IsAuthenticated],)
     def subscribe(self, request, **kwargs):
         user = request.user
-        author = get_object_or_404(User, id=self.kwargs.get('id'))
-
-        if request.method == 'POST':
-
-            if Subscribe.objects.filter(
-                user=user,
-                author=author
+        author = get_object_or_404(User, id=kwargs['id'])
+        if Subscribe.objects.filter(
+            user=user,
+            author=author,
             ).exists():
                 return Response({'error': 'Вы уже подписаны'},
                                 status=status.HTTP_400_BAD_REQUEST)
-            if request.user == author:
-                return Response({'error': 'Невозможно подписаться на себя'},
+        if request.user == author:
+            return Response({'error': 'Невозможно подписаться на себя'},
                                 status=status.HTTP_400_BAD_REQUEST)
-
-            Subscribe.objects.create(user=user, author=author)
+        Subscribe.objects.create(user=user, author=author)
+        return Response(
+            {'detail': 'Вы подписались на автора'},
+            status=status.HTTP_201_CREATED,
+        )
+    
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, **kwargs):
+        user = request.user
+        author = get_object_or_404(User, id=kwargs['id'])
+        if not Subscribe.objects.filter(
+            user=user,
+            author=author
+        ).exists():
             return Response(
-                {'detail': 'Вы подписались на автора'},
-                status=status.HTTP_201_CREATED,
-            )
-
-        if request.method == 'DELETE':
-            if not Subscribe.objects.filter(
-                user=user,
-                author=author
-            ).exists():
-                return Response(
                 status=status.HTTP_400_BAD_REQUEST,
             )
-            get_object_or_404(
-                Subscribe,
-                user=user,
-                author=author
-            ).delete()
-            return Response(
-                {'detail': 'Вы отписались от автора'},
-                status=status.HTTP_204_NO_CONTENT,
-            )
+        get_object_or_404(
+            Subscribe,
+            user=user,
+            author=author
+        ).delete()
+        return Response(
+            {'detail': 'Вы отписались от автора'},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
     @action(detail=False, methods=['GET'],
             permission_classes=[IsAuthenticated],)
