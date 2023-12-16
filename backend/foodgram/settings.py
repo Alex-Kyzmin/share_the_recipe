@@ -102,7 +102,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    # переопределяем дефолтный класс разрешения к path проекта
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
@@ -171,7 +170,7 @@ MAX_LENGTH_USER_MODEL = 150
 MAX_LENGTH_RECIPE_MODEL = 200
 MAX_LENGTH_COLOR = 7
 MIN_INGRREDIENT_VALUE = 1
-MAX_INGRREDIENT_VALUE = 10*2
+MAX_INGRREDIENT_VALUE = 1000
 INLAIN_MIN = 1
 INLAIN_MAX = 15
 MIN_COOKING_TIME = 1

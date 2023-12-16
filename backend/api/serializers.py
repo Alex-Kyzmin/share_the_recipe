@@ -23,6 +23,28 @@ from foodgram.settings import (MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,
 User = get_user_model()
 
 
+class ProjectUserSerializer(UserSerializer):
+    """Сериализатор для использования данных пользователя."""
+    is_subscribed = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+        )
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return obj.subscribing.filter(user=user).exists()
+
+
 class ProjectUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""
     id = serializers.ReadOnlyField()
@@ -72,28 +94,6 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
         return value
 
 
-class ProjectUserSerializer(UserSerializer):
-    """Сериализатор для использования данных пользователя."""
-    is_subscribed = SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-        )
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return obj.subscribing.filter(user=user).exists()
-
-
 class SubscribeSerializer(ProjectUserSerializer):
     """Сериализатор для демонстрации подписок пользователя."""
     recipes = SerializerMethodField(read_only=True)
@@ -132,11 +132,28 @@ class SubscribeSerializer(ProjectUserSerializer):
         ).data
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ингридиенты."""
 
     class Meta:
         model = Ingredient
+        fields = '__all__'
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели тэг к рецепту."""
+
+    class Meta:
+        model = Tag
         fields = '__all__'
 
 
@@ -166,14 +183,6 @@ class RecordIngredientInRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'amount',)
-
-
-class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели тэг к рецепту."""
-
-    class Meta:
-        model = Tag
-        fields = '__all__'
 
 
 class SmallRecipeSerializer(serializers.ModelSerializer):
@@ -240,15 +249,6 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
         return self.general_value(FavouriteRecipe, obj)
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
-
-
 class RecordRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецепта."""
     id = serializers.ReadOnlyField()
@@ -301,17 +301,16 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             )
         if len(value) != len(set(element.id for element in value)):
             raise serializers.ValidationError(
-                {'ingredients': 'Этот тэг уже добавлен!'}
+                {'tags': 'Этот тэг уже добавлен!'}
             )
         return value
 
     @transaction.atomic
-    def add_ingredients_tags(self, recipe, tags, ingredients):
-        recipe.tags.set(tags)
+    def add_ingredients(self, recipe, ingredients):
         ingredients = [IngredientInRecipe(
-            ingredient=Ingredient.objects.get(id=ingredient['id'].id),
-            recipe=recipe,
-            amount=ingredient['amount']
+                ingredient=Ingredient.objects.get(id=ingredient['id'].id),
+                recipe=recipe,
+                amount=ingredient['amount']
         ) for ingredient in ingredients]
         IngredientInRecipe.objects.bulk_create(
             sorted(
@@ -324,36 +323,29 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(
-            **validated_data,
-        )
-        self.add_ingredients_tags(recipe, tags, ingredients)
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.add_ingredients(
+            recipe=recipe,
+            ingredients=ingredients,
+            )
         return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.image = validated_data.get('image', instance.image)
-        instance.cooking_time = validated_data.get(
-            'cooking_time',
-            instance.cooking_time,
-        )
-        IngredientInRecipe.objects.filter(
-            recipe=instance,
-            ingredient=instance.ingredients.all()
-        ).delete
-        self.add_ingredients_tags(instance, tags, ingredients)
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self.add_ingredients(recipe=instance, ingredients=ingredients)
         instance.save()
         return instance
 
     def to_representation(self, instance):
-        return ReadRecipeSerializer(
-            instance,
-            context=self.context
-        ).data
+        context = {'request': self.context['request']}
+        return ReadRecipeSerializer(instance, context=context).data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
