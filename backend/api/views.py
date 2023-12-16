@@ -59,9 +59,15 @@ class CustomUserViewSet(UserViewSet):
         if request.user == author:
             return Response({'error': 'Невозможно подписаться на себя'},
                                 status=status.HTTP_400_BAD_REQUEST)
+        serializer = SubscribeSerializer(
+            author,
+            data=request.data,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
         Subscribe.objects.create(user=user, author=author)
         return Response(
-            {'detail': 'Вы подписались на автора'},
+            serializer.data,
             status=status.HTTP_201_CREATED,
         )
     

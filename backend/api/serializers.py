@@ -11,7 +11,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from rest_framework.relations import PrimaryKeyRelatedField
@@ -96,7 +96,7 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
 
 class SubscribeSerializer(ProjectUserSerializer):
     """Сериализатор для демонстрации подписок пользователя."""
-    recipes = SerializerMethodField(read_only=True)
+    recipes = SerializerMethodField()
     recipes_count = serializers.ReadOnlyField(source='recipes.count')
 
     class Meta(ProjectUserSerializer.Meta):
@@ -104,21 +104,28 @@ class SubscribeSerializer(ProjectUserSerializer):
             'recipes',
             'recipes_count',
         )
+        read_only_fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+        )
 
-    def validate(self, attrs):
-        user = self.context['request'].user
-        if user == self.instance:
+    def validate(self, data):
+        author = self.instance
+        user = self.context.get('request').user
+        if Subscribe.objects.filter(author=author, user=user).exists():
             raise serializers.ValidationError(
-                {'errors': 'Вы пытаетесь подписаться на самого себя'},
+                detail='Вы уже подписаны на этого пользователя!',
+                code=status.HTTP_400_BAD_REQUEST
             )
-        if Subscribe.objects.filter(
-            autor=self.instance,
-            user=user
-        ).exists():
+        if user == author:
             raise serializers.ValidationError(
-                {'errors': 'Вы уже подписаны на этого автора'},
+                detail='Вы не можете подписаться на самого себя!',
+                code=status.HTTP_400_BAD_REQUEST
             )
-        return super().validate(attrs)
+        return data
 
     def get_recipes(self, obj):
         request = self.context.get('request')
