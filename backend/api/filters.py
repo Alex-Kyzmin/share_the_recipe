@@ -8,7 +8,7 @@ class RecipeFilter(FilterSet):
         method='is_favorited_filter',
     )
     is_in_shopping_cart = filters.BooleanFilter(
-        method='is_in_shopping_cart_filter', 
+        method='is_in_shopping_cart_filter',
     )
 
     class Meta:
@@ -29,11 +29,13 @@ class RecipeFilter(FilterSet):
 
     # С данным кодом выдает ошибки в постмане.
     # прошу оставить этот вариант (а то глаз уже дергается)
-    #def filter_field(self, queryset, name, value):
-        user = self.request.user
-        if value and user.is_authenticated:
-            if name == 'is_favorited':
-                return queryset.filter(favorites_recipe__user=user)
-            elif name == 'is_in_shopping_cart':
-                return queryset.filter(shopping_cart__user=user)
-            return queryset
+    # def filter_favorit_or_cart(self, queriset, name, value):
+        #user = self.queriset.user
+        #param = {}
+        #if name == 'favorites':
+            #param[name] = 'favorites_user'
+        #elif  name == 'cart':
+            #param[name] = 'shopping_list_user'
+        #if value and not user.is_anonimus:
+            #return queriset.filter(param[name]__user=user)
+        #return queriset

@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import (MinValueValidator, MaxValueValidator,
+from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
 from django.db.models import UniqueConstraint
-from foodgram.settings import (MAX_LENGTH_RECIPE_MODEL, MAX_LENGTH_COLOR,
-                               MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,
-                               MIN_COOKING_TIME, MAX_COOKING_TIME)
+
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGRREDIENT_VALUE,
+                               MAX_LENGTH_COLOR, MAX_LENGTH_RECIPE_MODEL,
+                               MIN_COOKING_TIME, MIN_INGRREDIENT_VALUE)
 
 User = get_user_model()
 
@@ -78,7 +79,7 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Автор рецепта',
     )
-    text = models.TextField(    
+    text = models.TextField(
         verbose_name='Описание рецепта'
     )
     image = models.ImageField(

@@ -6,16 +6,17 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
-                            Recipe, ShoppingCart, Tag)
 from rest_framework import serializers, status
 from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.pagination import SubscribePagination
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGRREDIENT_VALUE,
+                               MAX_LENGTH_EMAIL, MAX_LENGTH_USER_MODEL,
+                               MIN_COOKING_TIME, MIN_INGRREDIENT_VALUE)
+from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag)
 from users.models import Subscribe
-from foodgram.settings import (MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,
-                               MIN_COOKING_TIME, MAX_COOKING_TIME, MAX_LENGTH_USER_MODEL, MAX_LENGTH_EMAIL)
 
 User = get_user_model()
 
@@ -65,7 +66,6 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
         required=True,
         write_only=True,
     )
-
 
     class Meta:
         model = User
@@ -177,8 +177,8 @@ class RecordIngredientInRecipeSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
     )
     amount = serializers.IntegerField(
-        min_value = MIN_INGRREDIENT_VALUE,
-        max_value = MAX_INGRREDIENT_VALUE,
+        min_value=MIN_INGRREDIENT_VALUE,
+        max_value=MAX_INGRREDIENT_VALUE,
     )
 
     class Meta:
@@ -245,7 +245,7 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         return self.general_value(ShoppingCart, obj)
-        
+
     def get_is_in_shopping_cart(self, obj):
         return self.general_value(FavouriteRecipe, obj)
 
@@ -264,11 +264,11 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
         many=True,
         required=True,
         allow_null=False,
-        )
+    )
     image = Base64ImageField()
-    cooking_time =serializers.IntegerField(
-        min_value = MIN_COOKING_TIME,
-        max_value = MAX_COOKING_TIME,
+    cooking_time = serializers.IntegerField(
+        min_value=MIN_COOKING_TIME,
+        max_value=MAX_COOKING_TIME,
     )
 
     class Meta:
@@ -309,9 +309,9 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def add_ingredients(self, recipe, ingredients):
         ingredients = [IngredientInRecipe(
-                ingredient=Ingredient.objects.get(id=ingredient['id'].id),
-                recipe=recipe,
-                amount=ingredient['amount']
+            ingredient=Ingredient.objects.get(id=ingredient['id'].id),
+            recipe=recipe,
+            amount=ingredient['amount']
         ) for ingredient in ingredients]
         IngredientInRecipe.objects.bulk_create(
             sorted(

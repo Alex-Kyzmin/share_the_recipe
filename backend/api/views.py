@@ -4,22 +4,22 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
-                            Recipe, ShoppingCart, Tag)
-from rest_framework import filters, status, serializers
+from rest_framework import filters, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from users.models import Subscribe
 
+from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag)
+from users.models import Subscribe
 from .filters import RecipeFilter
 from .pagination import ProjectPagination
 from .permissions import IsAdminAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           ProjectUserSerializer, ReadRecipeSerializer,
-                          RecordRecipeSerializer, SubscribeSerializer,
-                          SmallRecipeSerializer, TagSerializer)
+                          RecordRecipeSerializer, SmallRecipeSerializer,
+                          SubscribeSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -41,7 +41,6 @@ class CustomUserViewSet(UserViewSet):
                                            context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     @action(detail=True, methods=['POST'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, id):
@@ -51,11 +50,11 @@ class CustomUserViewSet(UserViewSet):
                                     author=author):
             return Response({'error': 'Вы уже подписаны'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
+
         if request.user == author:
             return Response({'error': 'Невозможно подписаться на себя'},
                             status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = SubscribeSerializer(
             author,
             data=request.data,
@@ -65,14 +64,14 @@ class CustomUserViewSet(UserViewSet):
         Subscribe.objects.create(user=request.user, author=author)
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
-    
+
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
         author = get_object_or_404(User, id=id)
         if not Subscribe.objects.filter(user=request.user,
                                         author=author):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
         get_object_or_404(Subscribe, user=request.user,
                           author=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -144,7 +143,7 @@ class RecipeViewSet(ModelViewSet):
             permission_classes=[IsAuthenticated])
     def favorite(self, request, **kwargs):
         recipe = Recipe.objects.filter(id=kwargs['pk']).first()
-        
+
         if not recipe:
             raise serializers.ValidationError('Рецепт не существует!')
 
@@ -159,7 +158,7 @@ class RecipeViewSet(ModelViewSet):
             SmallRecipeSerializer(recipe).data,
             status=status.HTTP_201_CREATED,
         )
-    
+
     @favorite.mapping.delete
     def delete_favorite(self, request, **kwargs):
         favorite = FavouriteRecipe.objects.filter(
@@ -169,8 +168,8 @@ class RecipeViewSet(ModelViewSet):
 
         if not favorite:
             raise serializers.ValidationError(
-            'Рецепт не добавлен в избранное!'
-        )
+                'Рецепт не добавлен в избранное!'
+            )
 
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -180,7 +179,7 @@ class RecipeViewSet(ModelViewSet):
             pagination_class=None)
     def shopping_cart(self, request, **kwargs):
         recipe = Recipe.objects.filter(id=kwargs['pk']).first()
-        
+
         if recipe:
             serializer = SmallRecipeSerializer(
                 recipe,
@@ -195,7 +194,7 @@ class RecipeViewSet(ModelViewSet):
                                             recipe=recipe)
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
-        
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @shopping_cart.mapping.delete
@@ -208,8 +207,8 @@ class RecipeViewSet(ModelViewSet):
 
         if not shopping_cart:
             raise serializers.ValidationError(
-            'Рецепт не добавлен в список покупок!'
-        )
+                'Рецепт не добавлен в список покупок!'
+            )
 
         shopping_cart.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -223,7 +222,7 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit',
         ).annotate(amount=Sum('amount'))
-        
+
         shopping_cart = (
             f'Список покупок для: {request.user.get_full_name()}\n\n'
         )

@@ -1,10 +1,9 @@
 from django.contrib import admin
 
+from foodgram.settings import INLAIN_MAX, INLAIN_MIN
 # настройка админ-зоны для импортируемых моделей
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
-
-from foodgram.settings import (INLAIN_MAX, INLAIN_MIN)
 
 
 class IngredientInRecipeInline(admin.TabularInline):
@@ -40,11 +39,11 @@ class RecipesAdmin(admin.ModelAdmin):
     @admin.display(description='Добавлено в избранное')
     def count_favorites(self, obj):
         return obj.favorites_recipe.count()
-    
+
     @admin.display(description='Ингридиенты')
     def ingredients_list(self, obj):
         return ','.join([i.name for i in obj.ingredients.all()])
-    
+
     @admin.display(description='Тэги')
     def tags_list(self, obj):
         return ','.join([i.name for i in obj.tags.all()])
@@ -55,6 +54,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit',)
     search_fields = ('name', 'measurement_unit',)
     list_filter = ('name',)
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
