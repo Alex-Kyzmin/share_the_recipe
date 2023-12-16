@@ -28,7 +28,7 @@ class RecipeFilter(FilterSet):
         return queryset
 
     # С данным кодом выдает ошибки в постмане.
-    # прошу оставить этот вариант (а то глаз уже дергается)
+    # прошу оставить этот вариант
     # def filter_favorit_or_cart(self, queriset, name, value):
         #user = self.queriset.user
         #param = {}
