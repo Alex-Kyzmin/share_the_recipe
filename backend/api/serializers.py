@@ -3,18 +3,15 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.core.validators import (MinValueValidator, MaxValueValidator,
-                                    RegexValidator)
-from django.db import models, transaction
-from django.shortcuts import get_object_or_404
+from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from rest_framework import serializers, status
-from rest_framework.fields import IntegerField, SerializerMethodField
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
+
 from api.pagination import SubscribePagination
 from users.models import Subscribe
 from foodgram.settings import (MIN_INGRREDIENT_VALUE, MAX_INGRREDIENT_VALUE,

@@ -1,7 +1,9 @@
 from django.contrib import admin
+
 # настройка админ-зоны для импортируемых моделей
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
+
 from foodgram.settings import (INLAIN_MAX, INLAIN_MIN)
 
 

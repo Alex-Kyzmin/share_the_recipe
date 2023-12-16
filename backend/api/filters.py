@@ -26,3 +26,13 @@ class RecipeFilter(FilterSet):
         if value and user.is_authenticated:
             return queryset.filter(shopping_cart__user=user)
         return queryset
+
+    # С данным кодом выдает ошибки в постмане
+    #def filter_field(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            if name == 'is_favorited':
+                return queryset.filter(favorites_recipe__user=user)
+            elif name == 'is_in_shopping_cart':
+                return queryset.filter(shopping_cart__user=user)
+            return queryset
