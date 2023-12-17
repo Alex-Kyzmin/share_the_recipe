@@ -28,7 +28,7 @@ class Ingredient(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return {self.name}
+        return f'{self.name}, {self.measurement_unit}'
 
 
 class Tag(models.Model):
@@ -158,11 +158,11 @@ class IngredientInRecipe(models.Model):
         ]
 
     def __str__(self):
+        ingredient = self.ingredient.name
+        ingredient_unit = self.ingredient.measurement_unit
+        amount = self.amount
         return (
-            f'{self.recipe.name}:'
-            f'{self.ingredient.name} -'
-            f'{self.amount} '
-            f'{self.ingredient.measurement_unit}'
+            f'{ingredient} ({ingredient_unit}) - {amount} '
         )
 
 
@@ -193,7 +193,7 @@ class FavouriteRecipe(models.Model):
         ]
 
     def __str__(self):
-        f'{self.user.get_username} добавил "{self.recipe.name}"'
+        return f'{self.user} добавил "{self.recipe}" в Избранное'
 
 
 class ShoppingCart(models.Model):
@@ -224,4 +224,4 @@ class ShoppingCart(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user.get_username} добавил "{self.recipe.name}"'
+        return f'{self.user} добавил "{self.recipe}" в список для покупок'
