@@ -69,7 +69,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 @admin.register(FavouriteRecipe)
 class FavouriteAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe',)
-    list_editable = ('user', 'recipe',)
+    search_fields = ('user', 'recipe',)
 
 
 @admin.register(IngredientInRecipe)
