@@ -13,8 +13,8 @@ env.read_env
 
 SECRET_KEY = os.getenv('SECRET_KEY', "default_key")
 
-#DEBUG = env.bool('DEBUG_VALUE', False)
-DEBUG = True
+DEBUG = env.bool('DEBUG_VALUE', False)
+#DEBUG = True
 
 ALLOWED_HOSTS = [os.getenv('IP_HOST'), os.getenv('DOMAIN_HOST'), '127.0.0.1', 'localhost',]
 
@@ -69,18 +69,18 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 # подключаем к проекту PostgreSQL
 DATABASES = {
-    #'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.getenv('POSTGRES_DB', 'django'),
-        #'USER': os.getenv('POSTGRES_USER', 'django'),
-        #'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        #'HOST': os.getenv('DB_HOST', ''),
-        #'PORT': os.getenv('DB_PORT', 5432)
-    #}
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
+    #'default': {
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #}
 }
 
 # Указываем ссылку на модель "пользователя" проекта в константе.
