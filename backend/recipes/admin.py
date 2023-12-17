@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from foodgram.settings import INLAIN_MAX, INLAIN_MIN
+from foodgram.settings import INLINE_MAX, INLINE_MIN
 # настройка админ-зоны для импортируемых моделей
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
@@ -14,8 +14,8 @@ class IngredientInRecipeInline(admin.TabularInline):
         'ingredient',
         'amount',
     )
-    min_num = INLAIN_MIN
-    max_num = INLAIN_MAX
+    min_num = INLINE_MIN
+    max_num = INLINE_MAX
 
 
 @admin.register(Recipe)

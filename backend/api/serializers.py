@@ -1,6 +1,8 @@
+import base64
 import re
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -9,9 +11,9 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from api.pagination import SubscribePagination
-from foodgram.settings import (MAX_COOKING_TIME, MAX_INGRREDIENT_VALUE,
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_VALUE,
                                MAX_LENGTH_EMAIL, MAX_LENGTH_USER_MODEL,
-                               MIN_COOKING_TIME, MIN_INGRREDIENT_VALUE)
+                               MIN_COOKING_TIME, MIN_INGREDIENT_VALUE)
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import Subscribe
@@ -131,6 +133,15 @@ class SubscribeSerializer(ProjectUserSerializer):
         return SmallRecipeSerializer(recipes, many=True).data
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ингридиенты."""
 
@@ -166,8 +177,8 @@ class RecordIngredientInRecipeSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
     )
     amount = serializers.IntegerField(
-        min_value=MIN_INGRREDIENT_VALUE,
-        max_value=MAX_INGRREDIENT_VALUE,
+        min_value=MIN_INGREDIENT_VALUE,
+        max_value=MAX_INGREDIENT_VALUE,
     )
 
     class Meta:
@@ -233,10 +244,10 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
                 and model.objects.filter(user=user, recipe=obj).exists())
 
     def get_is_favorited(self, obj):
-        return self.general_value(ShoppingCart, obj)
+        return self.general_value(FavouriteRecipe, obj)
 
     def get_is_in_shopping_cart(self, obj):
-        return self.general_value(FavouriteRecipe, obj)
+        return self.general_value(ShoppingCart, obj)
 
 
 class RecordRecipeSerializer(serializers.ModelSerializer):
@@ -278,7 +289,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'ingredients': 'Минимальное значение - 1 ингредиент!'}
             )
-        if len(value) != len(set([element['id'] for element in value])):
+        if len(value) != len({element['id'] for element in value}):
             raise serializers.ValidationError(
                 {'ingredients': 'Этот ингридиент уже добавлен!'}
             )
@@ -289,7 +300,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'tags': 'Выбирете хотя бы 1 тег для рецепта!'}
             )
-        if len(value) != len(set(element.id for element in value)):
+        if len(value) != len({element.id for element in value}):
             raise serializers.ValidationError(
                 {'tags': 'Этот тэг уже добавлен!'}
             )
@@ -313,7 +324,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = super().create(validated_data)
         recipe.tags.set(tags)
         self.add_ingredients(recipe=recipe, ingredients=ingredients)
         return recipe
