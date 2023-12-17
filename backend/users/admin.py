@@ -25,7 +25,7 @@ class UserAdmin(UserAdmin):
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'author',)
     list_filter = ('user', 'author',)
-    search_fields = ('user', 'author',)
+    search_fields = ('user__username', 'author__username',)
 
 
 admin.site.unregister(Group)
