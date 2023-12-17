@@ -26,16 +26,3 @@ class RecipeFilter(FilterSet):
         if value and user.is_authenticated:
             return queryset.filter(shopping_cart__user=user)
         return queryset
-
-    # С данным кодом выдает ошибки в постмане.
-    # прошу оставить этот вариант
-    # def filter_favorit_or_cart(self, queriset, name, value):
-        #user = self.queriset.user
-        #param = {}
-        #if name == 'favorites':
-            #param[name] = 'favorites_user'
-        #elif  name == 'cart':
-            #param[name] = 'shopping_list_user'
-        #if value and not user.is_anonimus:
-            #return queriset.filter(param[name]__user=user)
-        #return queriset
