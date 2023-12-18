@@ -11,7 +11,7 @@ from rest_framework.relations import PrimaryKeyRelatedField
 from api.pagination import SubscribePagination
 from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_VALUE,
                                MAX_LENGTH_EMAIL, MAX_LENGTH_USER_MODEL,
-                               MIN_COOKING_TIME, MIN_INGREDIENT_VALUE)
+                               MIN_UNIT)
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import Subscribe
@@ -166,7 +166,7 @@ class RecordIngredientInRecipeSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
     )
     amount = serializers.IntegerField(
-        min_value=MIN_INGREDIENT_VALUE,
+        min_value=MIN_UNIT,
         max_value=MAX_INGREDIENT_VALUE,
     )
 
@@ -256,7 +256,7 @@ class RecordRecipeSerializer(serializers.ModelSerializer):
     )
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
-        min_value=MIN_COOKING_TIME,
+        min_value=MIN_UNIT,
         max_value=MAX_COOKING_TIME,
     )
 

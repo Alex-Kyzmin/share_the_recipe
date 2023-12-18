@@ -10,16 +10,16 @@ from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
-                            Recipe, ShoppingCart, Tag)
-from users.models import Subscribe
-from .filters import RecipeFilter
-from .pagination import ProjectPagination
-from .permissions import IsAdminAuthorOrReadOnly
-from .serializers import (FavoriteSerializer, IngredientSerializer,
+from api.filters import RecipeFilter
+from api.pagination import ProjectPagination
+from api.permissions import IsAdminAuthorOrReadOnly
+from api.serializers import (FavoriteSerializer, IngredientSerializer,
                           ProjectUserSerializer, ReadRecipeSerializer,
                           RecordRecipeSerializer, SmallRecipeSerializer,
                           SubscribeSerializer, TagSerializer)
+from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag)
+from users.models import Subscribe
 
 User = get_user_model()
 

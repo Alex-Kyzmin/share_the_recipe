@@ -6,8 +6,7 @@ from django.db.models import UniqueConstraint
 
 from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_VALUE,
                                MAX_LENGTH_COLOR, MAX_LENGTH_RECIPE_MODEL,
-                               MIN_COOKING_TIME, MIN_INGREDIENT_VALUE,
-                               MIN_VALID_MESSAGE)
+                               MIN_VALID_MESSAGE, MIN_UNIT)
 
 User = get_user_model()
 
@@ -92,7 +91,7 @@ class Recipe(models.Model):
         verbose_name='Время приготовления блюда',
         validators=[
             MinValueValidator(
-                MIN_COOKING_TIME,
+                MIN_UNIT,
                 message=MIN_VALID_MESSAGE),
             MaxValueValidator(
                 MAX_COOKING_TIME,
@@ -138,7 +137,7 @@ class IngredientInRecipe(models.Model):
         verbose_name='Количество',
         validators=[
             MinValueValidator(
-                MIN_INGREDIENT_VALUE,
+                MIN_UNIT,
                 message=MIN_VALID_MESSAGE
             ),
             MaxValueValidator(
