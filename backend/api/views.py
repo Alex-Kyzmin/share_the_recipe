@@ -14,9 +14,9 @@ from api.filters import RecipeFilter
 from api.pagination import ProjectPagination
 from api.permissions import IsAdminAuthorOrReadOnly
 from api.serializers import (FavoriteSerializer, IngredientSerializer,
-                          ProjectUserSerializer, ReadRecipeSerializer,
-                          RecordRecipeSerializer, SmallRecipeSerializer,
-                          SubscribeSerializer, TagSerializer)
+                             ProjectUserSerializer, ReadRecipeSerializer,
+                             RecordRecipeSerializer, SmallRecipeSerializer,
+                             SubscribeSerializer, TagSerializer)
 from recipes.models import (FavouriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import Subscribe
