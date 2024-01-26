@@ -65,6 +65,6 @@ Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, React, PostgreSQ
     - CI/CD проверка (обновление докер-образов в docker hub и обновленное развертывание проекта на удаленном сервере)
     - Отправка сообщения в Telegram в случае успеха.
 
-## Разаработчики:
+## Разработчики:
     - frontend: Команда яндекс-практикум;
     - backend and CI/CD: Александр Кузьмин.
