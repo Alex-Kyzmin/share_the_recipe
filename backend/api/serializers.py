@@ -77,12 +77,12 @@ class ProjectUserCreateSerializer(UserCreateSerializer):
         )
 
     def validate_username(self, value):
-        vald_value = r'^[\w.@+-]+\Z'
+        valid_value = r'^[\w.@+-]+\Z'
         if value == 'me':
             raise serializers.ValidationError(
                 'Невозможно создать пользователя с таким именем!'
             )
-        if not re.match(vald_value, value):
+        if not re.match(valid_value, value):
             raise serializers.ValidationError(
                 'Имя не соответствующие регулярному выражению!'
             )

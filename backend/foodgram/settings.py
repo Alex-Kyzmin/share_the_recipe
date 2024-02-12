@@ -26,11 +26,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Подключаем модули к проекту.
     'rest_framework', # фреймворк DRF.
     'rest_framework.authtoken', # модуль authtoken фреймворка DRF.
     'djoser', # библиотека djoser.
-    # Подключаем приложение к проекту.
+    # Приложение к проекту.
     'users.apps.UsersConfig', # приложение отвечеющее за пользователей проекта.
     'recipes.apps.RecipesConfig', # приложение проекта рецепты.
     'api.apps.ApiConfig', # приложение по взаимодействию программ.
