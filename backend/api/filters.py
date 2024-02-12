@@ -4,6 +4,7 @@ from recipes.models import Recipe
 
 
 class RecipeFilter(FilterSet):
+    """Фильтры к модели рецептов"""
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(
         method='is_favorited_filter',
